@@ -37,7 +37,7 @@ jobs:
           ## Description
           This is an automated version and jsonnet dependencies update performed from CI.
         team-reviewers: kube-prometheus-reviewers
-        commiter: Prometheus Operator Bot <prom-op-bot@users.noreply.github.com>
+        committer: Prometheus Operator Bot <prom-op-bot@users.noreply.github.com>
         author: Prometheus Operator Bot <prom-op-bot@users.noreply.github.com>
         branch: automated-updates-${{ matrix.branch }}
         delete-branch: true
