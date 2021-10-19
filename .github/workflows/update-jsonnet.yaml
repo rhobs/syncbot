@@ -14,7 +14,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        repository: arajkumar/cluster-monitoring-operator
+        repository: openshift/cluster-monitoring-operator
         ref: ${{ matrix.branch }}
     - uses: actions/setup-go@v2
       with:
@@ -42,4 +42,4 @@ jobs:
         branch: automated-updates-${{ matrix.branch }}
         delete-branch: true
         token: ${{ steps.generate-token.outputs.token }}
-        push-to-fork: sthaha/cluster-monitoring-operator
+        push-to-fork: arajkumar/cluster-monitoring-operator
