@@ -46,6 +46,7 @@ jobs:
         author: Prometheus Operator Bot <prom-op-bot@users.noreply.github.com>
         branch: automated-updates-cmo-${{ matrix.branch }}
         delete-branch: true
-        token: ${{ steps.generate-token.outputs.token }}
+        # token: ${{ secrets.GITHUB_TOKEN }}
+        # token: ${{ steps.generate-token.outputs.token }}
         # token: ${{secrets.PAT}}
-        push-to-fork: arajkumar/nocode
+        # push-to-fork: arajkumar/nocode
