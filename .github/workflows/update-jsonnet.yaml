@@ -12,28 +12,28 @@ jobs:
         branch:
           - 'master'
     steps:
-    - uses: tibdex/github-app-token@v1
-      id: cloner
-      with:
-        app_id: ${{ secrets.CLONER_APP_ID }}
-        private_key: ${{ secrets.CLONER_APP_PRIVATE_KEY }}      
+#    - uses: tibdex/github-app-token@v1
+#      id: cloner
+#      with:
+#        app_id: ${{ secrets.CLONER_APP_ID }}
+#        private_key: ${{ secrets.CLONER_APP_PRIVATE_KEY }}      
     - uses: actions/checkout@v2
       with:
         repository: syncbot-io/nocode
         ref: ${{ matrix.branch }}
         # token: ${{secrets.PAT}}
-        token: ${{ steps.cloner.outputs.token }}
+        # token: ${{ steps.cloner.outputs.token }}
     - uses: actions/setup-go@v2
       with:
         go-version: 1.16
     - name: Update jsonnet dependencies
       run: |
         date >> time.txt
-    - uses: tibdex/github-app-token@v1
-      id: generate-token
-      with:
-        app_id: ${{ secrets.APP_ID }}
-        private_key: ${{ secrets.APP_PRIVATE_KEY }}        
+#    - uses: tibdex/github-app-token@v1
+#      id: generate-token
+#      with:
+#        app_id: ${{ secrets.APP_ID }}
+#        private_key: ${{ secrets.APP_PRIVATE_KEY }}        
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v3
       with:
