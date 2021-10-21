@@ -27,8 +27,8 @@ jobs:
     - uses: tibdex/github-app-token@v1
       id: cloner
       with:
-        app_id: ${{ secrets.CLONER_APP_ID }}
-        private_key: ${{ secrets.CLONER_APP_PRIVATE_KEY }}        
+        app_id: ${{ secrets.APP_ID }}
+        private_key: ${{ secrets.APP_PRIVATE_KEY }}        
     - uses: tibdex/github-app-token@v1
       id: generate-token
       with:
