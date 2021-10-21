@@ -14,7 +14,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        repository: openshift/cluster-monitoring-operator
+        repository: syncbot-io/nocode
         ref: ${{ matrix.branch }}
         token: ${{secrets.PAT}}
     - uses: actions/setup-go@v2
@@ -22,8 +22,7 @@ jobs:
         go-version: 1.16
     - name: Update jsonnet dependencies
       run: |
-        make update
-        make generate
+        date >> time.txt
     - uses: tibdex/github-app-token@v1
       id: generate-token
       with:
@@ -43,4 +42,4 @@ jobs:
         delete-branch: true
         token: ${{ steps.generate-token.outputs.token }}
         # token: ${{secrets.PAT}}
-        # push-to-fork: arajkumar/cluster-monitoring-operator
+        push-to-fork: arajkumar/nocode
