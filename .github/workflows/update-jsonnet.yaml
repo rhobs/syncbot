@@ -42,13 +42,13 @@ jobs:
         git config --local user.name "github-actions[bot]"
         git add .
         git commit -m "Add changes"
-    - name: Push changes
-      uses: ad-m/github-push-action@master
-      with:
-        github_token: ${{ steps.cloner.outputs.token }}
-        branch: automated-updates-cmo-${{ matrix.branch }}
-        repository: arajkumar/nocode
-        force: true
+#    - name: Push changes
+#      uses: ad-m/github-push-action@master
+#      with:
+#        github_token: ${{ steps.cloner.outputs.token }}
+#        branch: automated-updates-cmo-${{ matrix.branch }}
+#        repository: arajkumar/nocode
+#        force: true
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v3
       with:
@@ -62,6 +62,6 @@ jobs:
         branch: automated-updates-cmo-${{ matrix.branch }}
         delete-branch: true
         # token: ${{ secrets.GITHUB_TOKEN }}
-        token: ${{ steps.generate-token.outputs.token }}
+        token: ${{ steps.cloner.outputs.token }}
         # token: ${{secrets.PAT}}
         push-to-fork: arajkumar/nocode
