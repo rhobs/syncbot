@@ -16,6 +16,7 @@ jobs:
       with:
         repository: openshift/cluster-monitoring-operator
         ref: ${{ matrix.branch }}
+        token: ${{secrets.PAT}}
     - uses: actions/setup-go@v2
       with:
         go-version: 1.16
@@ -23,11 +24,11 @@ jobs:
       run: |
         make update
         make generate
-#    - uses: tibdex/github-app-token@v1
-#      id: generate-token
-#      with:
-#        app_id: ${{ secrets.APP_ID }}
-#        private_key: ${{ secrets.APP_PRIVATE_KEY }}        
+    - uses: tibdex/github-app-token@v1
+      id: generate-token
+      with:
+        app_id: ${{ secrets.APP_ID }}
+        private_key: ${{ secrets.APP_PRIVATE_KEY }}        
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v3
       with:
@@ -36,11 +37,10 @@ jobs:
         body: |
           ## Description
           This is an automated version and jsonnet dependencies update performed from CI.
-        team-reviewers: kube-prometheus-reviewers
         committer: Prometheus Operator Bot <prom-op-bot@users.noreply.github.com>
         author: Prometheus Operator Bot <prom-op-bot@users.noreply.github.com>
-        branch: automated-updates-${{ matrix.branch }}
+        branch: automated-updates-cmo-${{ matrix.branch }}
         delete-branch: true
-        # token: ${{ steps.generate-token.outputs.token }}
-        token: ${{secrets.PAT}}
+        token: ${{ steps.generate-token.outputs.token }}
+        # token: ${{secrets.PAT}}
         push-to-fork: arajkumar/cluster-monitoring-operator
