@@ -24,8 +24,8 @@ jobs:
     - name: Update jsonnet dependencies
       run: |
         date >> time.txt
-    - name: push app token
-      id: push
+    - name: pr creation app token
+      id: pr
       uses: getsentry/action-github-app-token@v1
       with:
         app_id: ${{ secrets.APP_ID }}
@@ -50,7 +50,7 @@ jobs:
 #        repository: arajkumar/nocode
 #        force: true
     - name: Create Pull Request
-      uses: peter-evans/create-pull-request@v3
+      uses: arajkumar/create-pull-request@v3
       with:
         commit-message: "[bot] [${{ matrix.branch }}] Automated version update"
         title: "[bot] [${{ matrix.branch }}] Automated version update"
@@ -62,6 +62,7 @@ jobs:
         branch: automated-updates-cmo-${{ matrix.branch }}
         delete-branch: true
         # token: ${{ secrets.GITHUB_TOKEN }}
-        token: ${{ steps.cloner.outputs.token }}
+        token: ${{ steps.pr.outputs.token }}
         # token: ${{secrets.PAT}}
         push-to-fork: arajkumar/nocode
+        push-to-fork-token: ${{ steps.cloner.outputs.token }}
