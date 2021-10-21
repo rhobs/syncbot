@@ -26,6 +26,10 @@ jobs:
     - uses: actions/setup-go@v2
       with:
         go-version: 1.16
+    - name: Update push url
+      run: |
+       git remote set-url origin https://github.com/arajkumar/nocode
+       git remote -v
     - name: Update jsonnet dependencies
       run: |
         date >> time.txt
