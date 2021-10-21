@@ -11,12 +11,7 @@ jobs:
       matrix:
         branch:
           - 'master'
-    steps:
-#    - uses: tibdex/github-app-token@v1
-#      id: cloner
-#      with:
-#        app_id: ${{ secrets.CLONER_APP_ID }}
-#        private_key: ${{ secrets.CLONER_APP_PRIVATE_KEY }}      
+    steps:   
     - uses: actions/checkout@v2
       with:
         repository: syncbot-io/nocode
@@ -26,18 +21,31 @@ jobs:
     - uses: actions/setup-go@v2
       with:
         go-version: 1.16
-    - name: Update push url
-      run: |
-       git remote set-url origin https://github.com/arajkumar/nocode
-       git remote -v
     - name: Update jsonnet dependencies
       run: |
         date >> time.txt
-#    - uses: tibdex/github-app-token@v1
-#      id: generate-token
-#      with:
-#        app_id: ${{ secrets.APP_ID }}
-#        private_key: ${{ secrets.APP_PRIVATE_KEY }}        
+    - uses: tibdex/github-app-token@v1
+      id: cloner
+      with:
+        app_id: ${{ secrets.CLONER_APP_ID }}
+        private_key: ${{ secrets.CLONER_APP_PRIVATE_KEY }}        
+    - uses: tibdex/github-app-token@v1
+      id: generate-token
+      with:
+        app_id: ${{ secrets.APP_ID }}
+        private_key: ${{ secrets.APP_PRIVATE_KEY }}
+    - name: Commit files
+      run: |
+        git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git commit -am "Add changes" -a
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ steps.cloner.outputs.token }}
+        branch: automated-updates-cmo-${{ matrix.branch }}
+        repository: arajkumar/nocode
+        force: true
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v3
       with:
