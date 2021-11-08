@@ -1,4 +1,4 @@
-name: Upgrade cmo jsonnet dependencies
+name: Upgrade cluster-monitoring-operator jsonnet dependencies
 
 on:
   workflow_dispatch:
