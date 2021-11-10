@@ -34,11 +34,6 @@ jobs:
       with:
         app_id: ${{ secrets.CLONER_APP_ID }}
         private_key: ${{ secrets.CLONER_APP_PRIVATE_KEY }}
-    - name: Render template
-      id: template
-      uses: chuhlomin/render-template@v1.2
-      with:
-        template: .github/PULL_REQUEST_TEMPLATE.md
     - name: Create Pull Request
       uses: arajkumar/create-pull-request@v3
       with:
@@ -47,7 +42,12 @@ jobs:
         body: |
           ## Description
           This is an automated version and jsonnet dependencies update performed from CI.
-          ${{ steps.template.outputs.result }}
+
+          If you wish to perform this manually, execute the following commands from cluster-monitoring-operator repo,
+          ```
+          make update
+          make generate
+          ```
         author: ${{ env.USER }}
         committer: ${{ env.USER }}
         signoff: true
