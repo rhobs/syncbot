@@ -24,12 +24,12 @@ on:
         required: true
         type: string
       theirs:
-        description: Resets using upstream content during merge conflict.
+        description: List of files to be reset using upstream content on merge conflict.
         required: false
         default: ''
         type: string
       ours:
-        description: Resets using downstream content during merge conflict.
+        description: List of files to be reset using downstream content on merge conflict.
         required: false
         default: ''
         type: string
