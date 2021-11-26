@@ -1,0 +1,141 @@
+name: Common merge flow
+on:
+  workflow_call:
+    inputs:
+      go-version:
+        description: go version
+        required: true
+        type: string
+      upstream:
+        description: Upstream repo path in owner/repo format
+        required: true
+        type: string
+      downstream:
+        description: Downstream repo path in owner/repo format
+        required: true
+        type: string
+      downstream-branch:
+        description: Downstream branch to create PR
+        required: false
+        default: master
+        type: string
+      sandbox:
+        description: Sandbox repo path in owner/repo format. Used a base to create PR against downstream.
+        required: true
+        type: string
+      restore-upstream:
+        description: List of files to be reset using upstream content on merge conflict.
+        required: false
+        default: ''
+        type: string
+      restore-downstream:
+        description: List of files to be reset using downstream content on merge conflict.
+        required: false
+        default: ''
+        type: string
+    secrets:
+      cloner-app-id:
+        description: Github ID of cloner app
+        required: true
+      cloner-app-private-key:
+        description: Github private key of cloner app
+        required: true
+      pr-app-id:
+        description: Github ID of PR creation app
+        required: true
+      pr-app-private-key:
+        description: Github private key of PR creation app
+        required: true
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    name: Perform merge operation
+    steps:
+      - name: Get latest upstream tag
+        id: upstream
+        uses: pozetroninc/github-action-get-latest-release@master
+        with:
+          repository: ${{ inputs.upstream }}
+          excludes: prerelease, draft
+      - uses: actions/checkout@v2
+        with:
+          repository: ${{ inputs.downstream }}
+          fetch-depth: 0
+          ref: ${{ inputs.downstream-branch }}
+      - name: Fetch all upstream tags
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git config --global core.editor "/bin/true"
+          git fetch https://github.com/${{ inputs.upstream }} --tags
+      - name: Merge with upstream ${{ steps.upstream.outputs.release }} tag
+        id: merge
+        run: |
+          git merge refs/tags/${{ steps.upstream.outputs.release }} --no-edit || echo '::set-output name=MERGE_CONFLICT::true'
+      - name: Resolve conflict using upstream contents
+        if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' && inputs.restore-upstream != ''}}
+        run: |
+            echo "reset ${{ inputs.restore-upstream }}"
+            git checkout --theirs ${{ inputs.restore-upstream }}
+            git add ${{ inputs.restore-upstream }}
+      - name: Resolve conflict using downstream contents
+        if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' && inputs.restore-downstream != ''}}
+        run: |
+            echo "reset ${{ inputs.restore-downstream }}"
+            git checkout --ours ${{ inputs.restore-downstream }}
+            git add ${{ inputs.restore-downstream }}
+      - name: Continue after merge conflict
+        if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' }}
+        run: git merge --continue
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ${{ inputs.go-version }}
+      - name: go mod vendor
+        run: go mod vendor
+      - name: Find github org name from repo name
+        id: org
+        run: |
+          echo "::set-output name=downstream::$(dirname ${{ inputs.downstream }})"
+          echo "::set-output name=sandbox::$(dirname ${{ inputs.sandbox }})"
+      - name: Get auth token to create pull request for ${{ inputs.downstream }}
+        id: pr
+        uses: getsentry/action-github-app-token@v1
+        with:
+          app_id: ${{ secrets.pr-app-id }}
+          private_key: ${{ secrets.pr-app-private-key }}
+          scope: ${{ steps.org.outputs.downstream }}
+      - name: Get auth token to push to ${{ inputs.sandbox }}
+        id: cloner
+        uses: getsentry/action-github-app-token@v1
+        with:
+          app_id: ${{ secrets.cloner-app-id }}
+          private_key: ${{ secrets.cloner-app-private-key }}
+          scope: ${{ steps.org.outputs.sandbox }}
+      - name: Create Pull Request
+        uses: arajkumar/create-pull-request@v3
+        with:
+          commit-message: "[bot] vendor: revendor"
+          title: "[bot] Bump ${{ inputs.downstream }} to ${{ steps.upstream.outputs.release }}"
+          body: |
+            ## Description
+            This is an automated version bump from CI.
+            If you wish to perform this manually, execute the following commands from ${{ inputs.downstream }} repo,
+            ```
+            git fetch https://github.com/${{ inputs.upstream }} --tags
+            if ! git merge refs/tags/${{ steps.upstream.outputs.release }} --no-edit; then
+              git checkout --theirs ${{ inputs.restore-upstream }}
+              git checkout --ours ${{ inputs.restore-downstream }}
+              git add ${{ inputs.restore-upstream }} ${{ inputs.restore-downstream }}
+              git merge --continue
+            fi
+            go mod vendor
+            ```
+          author: 'github-actions[bot]<github-actions[bot]@users.noreply.github.com>'
+          committer: 'github-actions[bot]<github-actions[bot]@users.noreply.github.com>'
+          signoff: true
+          branch: automated-updates-${{ inputs.downstream-branch }}
+          delete-branch: true
+          token: ${{ steps.pr.outputs.token }}
+          push-to-fork: ${{ inputs.sandbox }}
+          push-to-fork-token: ${{ steps.cloner.outputs.token }}
