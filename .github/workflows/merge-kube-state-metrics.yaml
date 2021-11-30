@@ -1,0 +1,22 @@
+name: kube-state-metrics merger
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *' #@daily
+
+jobs:
+  kube-state-metrics-merge:
+    uses: rhobs/syncbot/.github/workflows/merge-flow.yaml@main
+    with:
+      upstream: kubernetes/kube-state-metrics
+      downstream: openshift/kube-state-metrics
+      sandbox: rhobs/kube-state-metrics
+      go-version: 1.17
+      restore-upstream: CHANGELOG.md VERSION
+      restore-downstream: OWNERS
+    secrets:
+      pr-app-id: ${{ secrets.APP_ID }}
+      pr-app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
+      cloner-app-id: ${{ secrets.CLONER_APP_ID }}
+      cloner-app-private-key: ${{ secrets.CLONER_APP_PRIVATE_KEY }}
