@@ -1,0 +1,27 @@
+# This workflow will be triggered from repective component's prow CI post-merge job.
+# Refer https://docs.github.com/en/rest/reference/actions#create-a-workflow-dispatch-event
+name: Update cluster-monitoring-operator dependencies versions
+
+on:
+  workflow_dispatch:
+jobs:
+  versions-update:
+    uses: rhobs/syncbot/.github/workflows/cmo-make-targets.yaml@main
+    with:
+      go-version: 1.17
+      make-targets: versions generate
+      pr-title: "[bot] Automated dependencies version update"
+      pr-body: |
+        ## Description
+        This is an automated jsonnet/versions.yaml update executed by CI.
+
+        If you wish to perform this manually, execute the following commands from cluster-monitoring-operator repo,
+        ```
+        make versions
+        make generate
+        ```
+    secrets:
+      pr-app-id: ${{ secrets.APP_ID }}
+      pr-app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
+      cloner-app-id: ${{ secrets.CLONER_APP_ID }}
+      cloner-app-private-key: ${{ secrets.CLONER_APP_PRIVATE_KEY }}
