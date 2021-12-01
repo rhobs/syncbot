@@ -1,0 +1,81 @@
+name: cluster-monitoring-operator make targets
+on:
+  workflow_call:
+    inputs:
+      go-version:
+        description: go version
+        required: true
+        type: string
+      pr-title:
+        description: Pull request title.
+        required: true
+        type: string
+      pr-body:
+        description: Pull request body.
+        required: true
+        type: string
+      make-targets:
+        description: List of make targets to be executed sequentially.
+        required: true
+        type: string
+    secrets:
+      cloner-app-id:
+        description: Github ID of cloner app
+        required: true
+      cloner-app-private-key:
+        description: Github private key of cloner app
+        required: true
+      pr-app-id:
+        description: Github ID of PR creation app
+        required: true
+      pr-app-private-key:
+        description: Github private key of PR creation app
+        required: true
+env:
+  USER: 'github-actions[bot]<github-actions[bot]@users.noreply.github.com>'
+
+jobs:
+  execute-make-targets:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        repository: openshift/cluster-monitoring-operator
+        ref: master
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{ inputs.go-version }}
+    - name: Execute make targets - ${{ inputs.make-targets }}
+      run: make ${{ inputs.make-targets }}
+    - name: get pr creation app token
+      id: pr
+      uses: getsentry/action-github-app-token@v1
+      with:
+        app_id: ${{ secrets.pr-app-id }}
+        private_key: ${{ secrets.pr-app-private-key }}
+        scope: openshift
+    - name: get cloner app token
+      id: cloner
+      uses: getsentry/action-github-app-token@v1
+      with:
+        app_id: ${{ secrets.cloner-app-id }}
+        private_key: ${{ secrets.cloner-app-private-key }}
+        scope: rhobs
+    - name: Find branch name
+      id: branch
+      run: |
+        echo "::set-output name=sandbox::$(echo ${{ inputs.make-targets }} | sed 's/ /-/g')"
+    - name: Create Pull Request
+      uses: arajkumar/create-pull-request@v3
+      with:
+        commit-message: ${{ inputs.pr-title }}
+        title: ${{ inputs.pr-title }}
+        body: ${{ inputs.pr-body }}
+        author: ${{ env.USER }}
+        committer: ${{ env.USER }}
+        signoff: true
+        branch: automated-updates-master-${{ steps.branch.outputs.sandbox }}
+        delete-branch: true
+        token: ${{ steps.pr.outputs.token }}
+        push-to-fork: rhobs/cluster-monitoring-operator
+        push-to-fork-token: ${{ steps.cloner.outputs.token }}
