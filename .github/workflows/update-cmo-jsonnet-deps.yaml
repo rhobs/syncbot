@@ -3,58 +3,25 @@ name: Upgrade cluster-monitoring-operator jsonnet dependencies
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 0 * * 1'
-env:
-  USER: 'github-actions[bot]<github-actions[bot]@users.noreply.github.com>'
-
+    - cron: '0 0 * * 1' #@weekly
 jobs:
   jsonnet-update:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        repository: openshift/cluster-monitoring-operator
-        ref: master
-    - uses: actions/setup-go@v2
-      with:
-        go-version: 1.16
-    - name: update jsonnet dependencies
-      run: make update
-    - name: generate yaml assets
-      run: make generate
-    - name: get pr creation app token
-      id: pr
-      uses: getsentry/action-github-app-token@v1
-      with:
-        app_id: ${{ secrets.APP_ID }}
-        private_key: ${{ secrets.APP_PRIVATE_KEY }}
-        scope: openshift
-    - name: get cloner app token
-      id: cloner
-      uses: getsentry/action-github-app-token@v1
-      with:
-        app_id: ${{ secrets.CLONER_APP_ID }}
-        private_key: ${{ secrets.CLONER_APP_PRIVATE_KEY }}
-        scope: rhobs
-    - name: Create Pull Request
-      uses: arajkumar/create-pull-request@v3
-      with:
-        commit-message: "[bot] Automated jsonnet dependencies update"
-        title: "[bot] Automated jsonnet dependencies update"
-        body: |
-          ## Description
-          This is an automated version and jsonnet dependencies update performed from CI.
+    uses: rhobs/syncbot/.github/workflows/cmo-make-targets.yaml@main
+    with:
+      go-version: 1.17
+      make-targets: update generate
+      pr-title: "[bot] Automated jsonnet dependencies update"
+      pr-body: |
+        ## Description
+        This is an automated jsonnet dependencies update performed from CI.
 
-          If you wish to perform this manually, execute the following commands from cluster-monitoring-operator repo,
-          ```
-          make update
-          make generate
-          ```
-        author: ${{ env.USER }}
-        committer: ${{ env.USER }}
-        signoff: true
-        branch: automated-updates-master
-        delete-branch: true
-        token: ${{ steps.pr.outputs.token }}
-        push-to-fork: rhobs/cluster-monitoring-operator
-        push-to-fork-token: ${{ steps.cloner.outputs.token }}
+        If you wish to perform this manually, execute the following commands from cluster-monitoring-operator repo,
+        ```
+        make update
+        make generate
+        ```
+    secrets:
+      pr-app-id: ${{ secrets.APP_ID }}
+      pr-app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
+      cloner-app-id: ${{ secrets.CLONER_APP_ID }}
+      cloner-app-private-key: ${{ secrets.CLONER_APP_PRIVATE_KEY }}
