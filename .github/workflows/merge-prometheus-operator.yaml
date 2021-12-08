@@ -1,0 +1,25 @@
+name: Prometheus Operator merger
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *' #@daily
+jobs:
+  prometheus-operator-merge:
+    uses: rhobs/syncbot/.github/workflows/merge-flow.yaml@main
+    with:
+      upstream: prometheus-operator/prometheus-operator
+      downstream: openshift/prometheus-operator
+      sandbox: rhobs/prometheus-operator
+      go-version: 1.17
+      restore-upstream: >-
+         CHANGELOG.md
+         VERSION
+         go.mod
+         go.sum
+    secrets:
+      pr-app-id: ${{ secrets.APP_ID }}
+      pr-app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
+      cloner-app-id: ${{ secrets.CLONER_APP_ID }}
+      cloner-app-private-key: ${{ secrets.CLONER_APP_PRIVATE_KEY }}
+      slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
