@@ -1,0 +1,25 @@
+name: Prometheus Adapter merger
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *' #@daily
+jobs:
+  prometheus-adapter-merge:
+    uses: rhobs/syncbot/.github/workflows/merge-flow.yaml@main
+    with:
+      upstream: kubernetes-sigs/prometheus-adapter
+      downstream: openshift/k8s-prometheus-adapter
+      sandbox: rhobs/k8s-prometheus-adapter
+      go-version: 1.17
+      restore-downstream: >-
+         OWNERS
+      restore-upstream: >-
+         VERSION
+         go.mod
+         go.sum
+    secrets:
+      pr-app-id: ${{ secrets.APP_ID }}
+      pr-app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
+      cloner-app-id: ${{ secrets.CLONER_APP_ID }}
+      cloner-app-private-key: ${{ secrets.CLONER_APP_PRIVATE_KEY }}
