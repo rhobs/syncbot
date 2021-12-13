@@ -1,0 +1,26 @@
+name: Node exporter merger
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *' #@daily
+jobs:
+  node-exporter-merge:
+    uses: rhobs/syncbot/.github/workflows/merge-flow.yaml@main
+    with:
+      upstream: prometheus/node_exporter
+      downstream: openshift/node_exporter
+      sandbox: rhobs/node_exporter
+      go-version: 1.17
+      restore-downstream: >-
+         OWNERS
+      restore-upstream: >-
+         VERSION
+         go.mod
+         go.sum
+    secrets:
+      pr-app-id: ${{ secrets.APP_ID }}
+      pr-app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
+      cloner-app-id: ${{ secrets.CLONER_APP_ID }}
+      cloner-app-private-key: ${{ secrets.CLONER_APP_PRIVATE_KEY }}
+      slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
