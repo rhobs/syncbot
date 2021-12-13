@@ -23,3 +23,4 @@ jobs:
       pr-app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
       cloner-app-id: ${{ secrets.CLONER_APP_ID }}
       cloner-app-private-key: ${{ secrets.CLONER_APP_PRIVATE_KEY }}
+      slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}

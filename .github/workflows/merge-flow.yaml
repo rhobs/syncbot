@@ -46,6 +46,9 @@ on:
       pr-app-private-key:
         description: Github private key of PR creation app
         required: true
+      slack-webhook-url:
+        description: Slack webhook URL to send notification
+        required: false
 
 jobs:
   merge:
@@ -114,6 +117,7 @@ jobs:
           scope: ${{ steps.org.outputs.sandbox }}
       - name: Create Pull Request
         uses: arajkumar/create-pull-request@v3
+        id: create-pr
         with:
           commit-message: "[bot] vendor: revendor"
           title: "[bot] Bump ${{ inputs.downstream }} to ${{ steps.upstream.outputs.release }}"
@@ -139,3 +143,33 @@ jobs:
           token: ${{ steps.pr.outputs.token }}
           push-to-fork: ${{ inputs.sandbox }}
           push-to-fork-token: ${{ steps.cloner.outputs.token }}
+      - uses: 8398a7/action-slack@v3
+        continue-on-error: true
+        if: ${{ success() && secrets.slack-webhook-url != '' }}
+        with:
+          status: custom
+          fields: workflow
+          custom_payload: |
+            {
+              attachments: [{
+                color: 'good',
+                text: `${process.env.AS_WORKFLOW}\n PR ${{ steps.create-pr.outputs.pull-request-url }} has been ${{ steps.create-pr.outputs.pull-request-operation }} .`,
+              }]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.slack-webhook-url }}
+      - uses: 8398a7/action-slack@v3
+        continue-on-error: true
+        if: ${{ failure() && secrets.slack-webhook-url != '' }}
+        with:
+          status: custom
+          fields: workflow
+          custom_payload: |
+            {
+              attachments: [{
+                color: 'danger',
+                text: `${process.env.AS_WORKFLOW} has failed.`,
+              }]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.slack-webhook-url }}
