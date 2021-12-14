@@ -15,7 +15,9 @@ jobs:
       restore-downstream: >-
          OWNERS
       restore-upstream: >-
+         CHANGELOG.md
          VERSION
+         collector
          go.mod
          go.sum
     secrets:
