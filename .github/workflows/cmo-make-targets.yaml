@@ -83,6 +83,14 @@ jobs:
         token: ${{ steps.pr.outputs.token }}
         push-to-fork: rhobs/cluster-monitoring-operator
         push-to-fork-token: ${{ steps.cloner.outputs.token }}
+    - name: Compose slack message body
+      id: slack-message
+      run: |
+        if [ "${{ steps.create-pr.outputs.pull-request-url }}" == "" ]; then
+          echo '::set-output name=message::No changes detected.'
+        else
+          echo '::set-output name=message::PR ${{ steps.create-pr.outputs.pull-request-url }} has been ${{ steps.create-pr.outputs.pull-request-operation }}.'
+        fi
     - uses: 8398a7/action-slack@v3
       continue-on-error: true
       if: success()
@@ -93,7 +101,7 @@ jobs:
           {
             attachments: [{
               color: 'good',
-              text: `${process.env.AS_WORKFLOW}\n PR ${{ steps.create-pr.outputs.pull-request-url }} has been ${{ steps.create-pr.outputs.pull-request-operation }} .`,
+              text: `${process.env.AS_WORKFLOW}\n ${{ steps.slack-message.outputs.message }}`,
             }]
           }
       env:
