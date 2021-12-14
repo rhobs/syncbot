@@ -33,7 +33,7 @@ on:
         required: true
       slack-webhook-url:
         description: Slack webhook URL to send notification
-        required: false
+        required: true
 env:
   USER: 'github-actions[bot]<github-actions[bot]@users.noreply.github.com>'
 

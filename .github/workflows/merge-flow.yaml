@@ -48,7 +48,7 @@ on:
         required: true
       slack-webhook-url:
         description: Slack webhook URL to send notification
-        required: false
+        required: true
 
 jobs:
   merge:
