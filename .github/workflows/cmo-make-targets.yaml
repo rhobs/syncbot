@@ -33,7 +33,7 @@ on:
         required: true
       slack-webhook-url:
         description: Slack webhook URL to send notification
-        required: false
+        required: true
 env:
   USER: 'github-actions[bot]<github-actions[bot]@users.noreply.github.com>'
 
@@ -85,7 +85,7 @@ jobs:
         push-to-fork-token: ${{ steps.cloner.outputs.token }}
     - uses: 8398a7/action-slack@v3
       continue-on-error: true
-      if: ${{ success() && secrets.slack-webhook-url != '' }}
+      if: success()
       with:
         status: custom
         fields: workflow
@@ -100,7 +100,7 @@ jobs:
         SLACK_WEBHOOK_URL: ${{ secrets.slack-webhook-url }}
     - uses: 8398a7/action-slack@v3
       continue-on-error: true
-      if: ${{ failure() && secrets.slack-webhook-url != '' }}
+      if: failure()
       with:
         status: custom
         fields: workflow
