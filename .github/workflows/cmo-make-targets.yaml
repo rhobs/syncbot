@@ -50,6 +50,13 @@ jobs:
         go-version: ${{ inputs.go-version }}
     - name: Execute make targets - ${{ inputs.make-targets }}
       run: make ${{ inputs.make-targets }}
+    - name: Ignore if change is only in jsonnetfile.lock.json
+      run: |
+        # Reset jsonnetfile.lock.json if no dependencies were updated
+        changedFiles=$(git diff --name-only | grep -cv 'jsonnetfile.lock.json')
+        if [[ "$changedFiles" -eq 0 ]]; then
+          git checkout -- jsonnetfile.lock.json;
+        fi
     - name: get pr creation app token
       id: pr
       uses: getsentry/action-github-app-token@v1
