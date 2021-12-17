@@ -94,6 +94,11 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: ${{ inputs.go-version }}
+      - name: Remove dependabot configuration
+        continue-on-error: true
+        run: |
+          rm -f .github/dependabot.*
+          git commit -a -s -m "[bot] remove dependabot config"
       - name: go mod vendor
         run: go mod vendor
       - name: Find github org name from repo name
