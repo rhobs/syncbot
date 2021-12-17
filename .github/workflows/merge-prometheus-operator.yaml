@@ -13,10 +13,14 @@ jobs:
       sandbox: rhobs/prometheus-operator
       go-version: 1.17
       restore-upstream: >-
-         CHANGELOG.md
-         VERSION
-         go.mod
-         go.sum
+        CHANGELOG.md
+        Documentation
+        VERSION
+        bundle.yaml
+        example
+        go.mod
+        go.sum
+        pkg
     secrets:
       pr-app-id: ${{ secrets.APP_ID }}
       pr-app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
