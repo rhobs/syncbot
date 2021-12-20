@@ -2,6 +2,11 @@ name: Common merge flow
 on:
   workflow_call:
     inputs:
+      node-version:
+        description: node version
+        default: '16'
+        required: false
+        type: string
       go-version:
         description: go version
         required: true
@@ -30,6 +35,11 @@ on:
         type: string
       restore-downstream:
         description: List of files to be reset using downstream content on merge conflict.
+        required: false
+        default: ''
+        type: string
+      assets-cmd:
+        description: Commands which generates assets.
         required: false
         default: ''
         type: string
@@ -94,13 +104,29 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: ${{ inputs.go-version }}
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ inputs.node-version }}
       - name: Remove dependabot configuration
-        continue-on-error: true
         run: |
           rm -f .github/dependabot.*
-          git commit -a -s -m "[bot] remove dependabot config"
+          git add .github
+          git diff --cached --exit-code || git commit -s -m "[bot] remove dependabot config"
       - name: go mod vendor
-        run: go mod vendor
+        run: |
+          go mod vendor
+          git add vendor
+          git diff --cached --exit-code || git commit -s -m "[bot] vendor: revendor"
+      - name: Generate assets
+        if: ${{ inputs.assets-cmd != '' }}
+        run: ${{ inputs.assets-cmd }}
+      - name: Generate rh-manifest.txt
+        run: |
+          if [ -f scripts/rh-manifest.sh ]; then
+            bash scripts/rh-manifest.sh
+            git add rh-manifest.txt
+            git commit -s -m "[bot] update rh-manifest.txt"
+          fi
       - name: Find github org name from repo name
         id: org
         run: |
@@ -124,7 +150,6 @@ jobs:
         uses: arajkumar/create-pull-request@v3
         id: create-pr
         with:
-          commit-message: "[bot] vendor: revendor"
           title: "[bot] Bump ${{ inputs.downstream }} to ${{ steps.upstream.outputs.release }}"
           body: |
             ## Description
