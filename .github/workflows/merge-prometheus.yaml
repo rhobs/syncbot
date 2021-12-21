@@ -12,7 +12,16 @@ jobs:
       downstream: openshift/prometheus
       sandbox: rhobs/prometheus
       go-version: 1.17
-      restore-upstream: CHANGELOG.md VERSION go.mod go.sum
+      restore-upstream: >-
+        CHANGELOG.md
+        VERSION
+        go.mod
+        go.sum
+      assets-cmd: |
+        make assets
+        git add web/ui/assets_vfsdata.go
+        git commit -s -m "[bot] assets: generate"
+
     secrets:
       pr-app-id: ${{ secrets.APP_ID }}
       pr-app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
