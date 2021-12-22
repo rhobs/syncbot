@@ -20,7 +20,7 @@ jobs:
       assets-cmd: |
         make assets
         git add web/ui/assets_vfsdata.go
-        git commit -s -m "[bot] assets: generate"
+        git diff --cached --exit-code || git commit -s -m "[bot] assets: generate"
 
     secrets:
       pr-app-id: ${{ secrets.APP_ID }}
