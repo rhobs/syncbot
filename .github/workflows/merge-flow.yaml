@@ -109,9 +109,10 @@ jobs:
           node-version: ${{ inputs.node-version }}
       - name: Remove dependabot configuration
         run: |
-          rm -f .github/dependabot.*
-          git add .github
-          git diff --cached --exit-code || git commit -s -m "[bot] remove dependabot config"
+          if [ -f .github/dependabot.yml ]; then
+            git rm -f .github/dependabot.yml
+            git commit -s -m "[bot] remove dependabot config"
+          fi
       - name: go mod vendor
         run: |
           go mod vendor
@@ -125,7 +126,7 @@ jobs:
           if [ -f scripts/rh-manifest.sh ]; then
             bash scripts/rh-manifest.sh
             git add rh-manifest.txt
-            git commit -s -m "[bot] update rh-manifest.txt"
+            git diff --cached --exit-code || git commit -s -m "[bot] update rh-manifest.txt"
           fi
       - name: Find github org name from repo name
         id: org
