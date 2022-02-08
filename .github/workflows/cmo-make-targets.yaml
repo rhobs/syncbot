@@ -55,7 +55,7 @@ jobs:
         # Reset jsonnetfile.lock.json if no dependencies were updated
         changedFiles=$(git diff --name-only | grep -cv 'jsonnetfile.lock.json')
         if [[ "$changedFiles" -eq 0 ]]; then
-          git checkout -- jsonnetfile.lock.json;
+          git checkout -- jsonnet/jsonnetfile.lock.json;
         fi
     - name: get pr creation app token
       id: pr
