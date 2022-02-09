@@ -53,7 +53,7 @@ jobs:
     - name: Ignore if change is only in jsonnetfile.lock.json
       run: |
         # Reset jsonnetfile.lock.json if no dependencies were updated
-        changedFiles=$(git diff --name-only | grep -cv 'jsonnetfile.lock.json')
+        changedFiles=$(git diff --name-only | grep -v 'jsonnetfile.lock.json' | wc -l)
         if [[ "$changedFiles" -eq 0 ]]; then
           git checkout -- jsonnet/jsonnetfile.lock.json;
         fi
