@@ -98,6 +98,10 @@ jobs:
             echo "reset ${{ inputs.restore-downstream }}"
             git checkout --ours ${{ inputs.restore-downstream }}
             git add ${{ inputs.restore-downstream }}
+      - name: Resolve conflict due to deleted downstream files
+        if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' }}
+        run: |
+            git status --porcelain | awk '{ if ($1=="DU") print $2 }' | xargs -I {} git rm {}
       - name: Continue after merge conflict
         if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' }}
         run: git merge --continue
