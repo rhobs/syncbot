@@ -5,16 +5,16 @@ Workflows to automate Openshift monitoring dependency upgrades.
 ## Introduction
 Cluster Monitoring Operator relies on various upstream components to fulfill the monitoring needs for Openshift. [Here is a list](https://github.com/openshift/cluster-monitoring-operator/blob/master/jsonnet/versions.yaml) of those components,
 
-- prometheus
-- alertmanager
-- prometheus-operator
-- thanos
-- node_exporter
-- kube_state_metrics
-- prometheus_adapter
-- prom_label_proxy
-- kube_rbac_proxy(auth team handles it)
-- grafana (deprecated)
+- [prometheus](https://github.com/openshift/prometheus)
+- [prometheus-alertmanager](https://github.com/openshift/prometheus-alertmanager)
+- [prometheus-operator](https://github.com/openshift/prometheus-operator)
+- [thanos](https://github.com/openshift/thanos)
+- [node_exporter](https://github.com/openshift/node_exporter)
+- [kube-state-metrics](https://github.com/openshift/kube-state-metrics)
+- [k8s-prometheus-adapter](https://github.com/openshift/k8s-prometheus-adapter)
+- [prom-label-proxy](https://github.com/openshift/prom-label-proxy)
+- [kube_rbac_proxy(auth team handles it)](https://github.com/openshift/kube-rbac-proxy)
+- [grafana (deprecated)](https://github.com/openshift/grafana)
 
 Since those components are shipped as part of the Openshift release payload, it must be built using Openshift build jobs (OSBS), which requires customization to build scripts. To accomplish this, the Monitoring team maintains a fork of all those components under openshift github org.
 
