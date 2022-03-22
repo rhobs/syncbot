@@ -17,6 +17,7 @@ jobs:
         VERSION
         go.mod
         go.sum
+        .golangci.yml
       assets-cmd: |
         make assets
         git add web/ui/assets_vfsdata.go
