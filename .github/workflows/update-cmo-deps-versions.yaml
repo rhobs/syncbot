@@ -1,6 +1,6 @@
 # This workflow will be triggered from repective component's prow CI post-merge job.
 # Refer https://docs.github.com/en/rest/reference/actions#create-a-workflow-dispatch-event
-name: Update cluster-monitoring-operator dependencies versions
+name: Synchronize component versions in cluster-monitoring-operator
 
 on:
   workflow_dispatch:
@@ -12,12 +12,12 @@ jobs:
     with:
       go-version: 1.17
       make-targets: versions generate
-      pr-title: "[bot] Automated dependencies version update"
+      pr-title: "[bot] Synchronize versions of the downstream components"
       pr-body: |
         ## Description
-        This is an automated jsonnet/versions.yaml update executed by CI.
+        This pull request updates `jsonnet/versions.yaml` to match with the downstream versions of the monitoring components and regenerates all assets.
 
-        If you wish to perform this manually, execute the following commands from cluster-monitoring-operator repo,
+        If you wish to perform this manually, execute the following commands from cluster-monitoring-operator repository:
         ```
         make versions
         make generate
