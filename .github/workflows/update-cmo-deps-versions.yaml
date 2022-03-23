@@ -4,6 +4,8 @@ name: Update cluster-monitoring-operator dependencies versions
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *' #@daily
 jobs:
   versions-update:
     uses: rhobs/syncbot/.github/workflows/cmo-make-targets.yaml@main
