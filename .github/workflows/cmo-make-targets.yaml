@@ -94,9 +94,9 @@ jobs:
       id: slack-message
       run: |
         if [ "${{ steps.create-pr.outputs.pull-request-url }}" == "" ]; then
-          echo '::set-output name=message::No changes detected.'
+          echo "::set-output name=message::No changes detected."
         else
-          echo '::set-output name=message::PR ${{ steps.create-pr.outputs.pull-request-url }} has been ${{ steps.create-pr.outputs.pull-request-operation }}.'
+          echo "::set-output name=message::PR ${{ steps.create-pr.outputs.pull-request-url }} has been ${{ steps.create-pr.outputs.pull-request-operation || 'updated' }}."
         fi
     - uses: 8398a7/action-slack@v3
       continue-on-error: true
