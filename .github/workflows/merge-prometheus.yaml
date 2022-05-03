@@ -19,8 +19,9 @@ jobs:
         go.sum
         .golangci.yml
       assets-cmd: |
-        make assets
-        git add web/ui/assets_vfsdata.go
+        make assets-compress
+        find web/ui/static/react -type f -name '*.gz' -exec git add {} -f \;
+        git add web/ui/embed.go -f
         git diff --cached --exit-code || git commit -s -m "[bot] assets: generate"
 
     secrets:
