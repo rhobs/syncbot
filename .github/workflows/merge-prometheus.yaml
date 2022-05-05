@@ -20,8 +20,8 @@ jobs:
         .golangci.yml
       assets-cmd: |
         make assets-compress
-        find web/ui/static/react -type f -name '*.gz' -exec git add {} -f \;
-        git add web/ui/embed.go -f
+        find web/ui/static -type f -name '*.gz' -exec git add {} \;
+        git add web/ui/embed.go
         git diff --cached --exit-code || git commit -s -m "[bot] assets: generate"
 
     secrets:
