@@ -71,6 +71,22 @@ jobs:
         with:
           repository: ${{ inputs.upstream }}
           excludes: prerelease, draft
+      - name: Find github org name from repo name
+        id: org
+        run: |
+          echo "::set-output name=upstream::$(dirname ${{ inputs.upstream }})"
+          echo "::set-output name=downstream::$(dirname ${{ inputs.downstream }})"
+          echo "::set-output name=sandbox::$(dirname ${{ inputs.sandbox }})"
+      - name: Check openshift fork is upto date
+        id: fork-sync
+        run: |
+          AHEAD_BY=$(curl -s "https://api.github.com/repos/${{ inputs.downstream }}/compare/{${{ inputs.downstream-branch }}}...{${{ steps.org.outputs.upstream }}:${{steps.upstream.outputs.release }}}" -o - | jq .ahead_by)
+          if [ "${AHEAD_BY}" != "0" ]; then
+            echo "::set-output name=status::outdated"
+          else
+            echo "::set-output name=status::uptodate"
+            exit 1
+          fi
       - uses: actions/checkout@v2
         with:
           repository: ${{ inputs.downstream }}
@@ -132,11 +148,6 @@ jobs:
             git add rh-manifest.txt
             git diff --cached --exit-code || git commit -s -m "[bot] update rh-manifest.txt"
           fi
-      - name: Find github org name from repo name
-        id: org
-        run: |
-          echo "::set-output name=downstream::$(dirname ${{ inputs.downstream }})"
-          echo "::set-output name=sandbox::$(dirname ${{ inputs.sandbox }})"
       - name: Get auth token to create pull request for ${{ inputs.downstream }}
         id: pr
         uses: getsentry/action-github-app-token@v1
@@ -179,16 +190,18 @@ jobs:
           push-to-fork: ${{ inputs.sandbox }}
           push-to-fork-token: ${{ steps.cloner.outputs.token }}
       - name: Compose slack message body
+        continue-on-error: true
+        if: success() || steps.fork-sync.outputs.status == 'uptodate'
         id: slack-message
         run: |
-          if [ "${{ steps.create-pr.outputs.pull-request-url }}" == "" ]; then
+          if [ "${{ steps.create-pr.outputs.pull-request-url }}" == "" ] || [ ${{ steps.fork-sync.outputs.status }} == "uptodate" ] ; then
             echo "::set-output name=message::${{ inputs.downstream }} is already upto date with tag ${{ steps.upstream.outputs.release }}."
           else
             echo "::set-output name=message::PR ${{ steps.create-pr.outputs.pull-request-url }} has been ${{ steps.create-pr.outputs.pull-request-operation || 'updated' }}."
           fi
       - uses: 8398a7/action-slack@v3
         continue-on-error: true
-        if: success()
+        if: success() || steps.fork-sync.outputs.status == 'uptodate'
         with:
           status: custom
           fields: workflow
@@ -203,7 +216,7 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.slack-webhook-url }}
       - uses: 8398a7/action-slack@v3
         continue-on-error: true
-        if: failure()
+        if: failure() && steps.fork-sync.outputs.status != 'uptodate'
         with:
           status: custom
           fields: workflow
