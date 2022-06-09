@@ -163,7 +163,7 @@ jobs:
           private_key: ${{ secrets.cloner-app-private-key }}
           scope: ${{ steps.org.outputs.sandbox }}
       - name: Create Pull Request
-        uses: arajkumar/create-pull-request@v3
+        uses: rhobs/create-pull-request@v3
         id: create-pr
         with:
           title: "[bot] Bump ${{ inputs.downstream }} to ${{ steps.upstream.outputs.release }}"

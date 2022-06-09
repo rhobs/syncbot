@@ -77,7 +77,7 @@ jobs:
         echo "::set-output name=sandbox::$(echo ${{ inputs.make-targets }} | sed 's/ /-/g')"
     - name: Create Pull Request
       id: create-pr
-      uses: arajkumar/create-pull-request@v3
+      uses: rhobs/create-pull-request@v3
       with:
         commit-message: ${{ inputs.pr-title }}
         title: ${{ inputs.pr-title }}
