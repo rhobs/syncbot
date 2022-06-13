@@ -13,7 +13,10 @@ jobs:
       downstream: openshift/kube-state-metrics
       sandbox: rhobs/kube-state-metrics
       go-version: 1.17
-      restore-upstream: CHANGELOG.md VERSION
+      restore-upstream: >-
+        CHANGELOG.md 
+        VERSION
+        internal
       restore-downstream: OWNERS
     secrets:
       pr-app-id: ${{ secrets.APP_ID }}
