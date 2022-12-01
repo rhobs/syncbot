@@ -133,10 +133,11 @@ jobs:
             git rm -f .github/dependabot.yml
             git commit -s -m "[bot] remove dependabot config"
           fi
-      - name: go mod vendor
+      - name: go mod tidy + vendor
         run: |
+          go mod tidy
           go mod vendor
-          git add vendor
+          git add go.mod go.sum vendor
           git diff --cached --exit-code || git commit -s -m "[bot] vendor: revendor"
       - name: Generate assets
         if: ${{ inputs.assets-cmd != '' }}
@@ -179,6 +180,7 @@ jobs:
               git add ${{ inputs.restore-upstream }} ${{ inputs.restore-downstream }}
               git merge --continue
             fi
+            go mod tidy
             go mod vendor
             ```
           author: 'github-actions[bot]<github-actions[bot]@users.noreply.github.com>'
