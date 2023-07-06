@@ -182,6 +182,12 @@ jobs:
             fi
             go mod tidy
             go mod vendor
+            ${{ inputs.assets-cmd }}
+            if [ -f scripts/rh-manifest.sh ]; then
+              bash scripts/rh-manifest.sh
+              git add rh-manifest.txt
+              git diff --cached --exit-code || git commit -s -m "[bot] update rh-manifest.txt"
+            fi
             ```
           author: 'github-actions[bot]<github-actions[bot]@users.noreply.github.com>'
           committer: 'github-actions[bot]<github-actions[bot]@users.noreply.github.com>'
