@@ -12,6 +12,7 @@ Cluster Monitoring Operator relies on various upstream components to fulfill the
 - [node_exporter](https://github.com/openshift/node_exporter)
 - [kube-state-metrics](https://github.com/openshift/kube-state-metrics)
 - [k8s-prometheus-adapter](https://github.com/openshift/k8s-prometheus-adapter)
+- [kubernetes-metrics-server](https://github.com/openshift/kubernetes-metrics-server)
 - [prom-label-proxy](https://github.com/openshift/prom-label-proxy)
 - [kube_rbac_proxy(auth team handles it)](https://github.com/openshift/kube-rbac-proxy)
 - [grafana (deprecated)](https://github.com/openshift/grafana)
