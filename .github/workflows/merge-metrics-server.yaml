@@ -12,6 +12,7 @@ jobs:
       upstream: kubernetes-sigs/metrics-server
       downstream: openshift/kubernetes-metrics-server
       sandbox: rhobs/kubernetes-metrics-server
+      go-version: 1.19
       restore-upstream: CHANGELOG.md VERSION
       restore-downstream: OWNERS charts/OWNERS
     secrets:
