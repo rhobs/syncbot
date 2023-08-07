@@ -74,7 +74,7 @@ jobs:
     - name: Find branch name
       id: branch
       run: |
-        echo "sandbox=$(echo ${{ inputs.make-targets }} | sed 's/ /-/g')" >> $GITHUB_OUTPUT
+        echo "name=sandbox::$(echo ${{ inputs.make-targets }} | sed 's/ /-/g')" >> $GITHUB_OUTPUT
     - name: Create Pull Request
       id: create-pr
       uses: rhobs/create-pull-request@v3
@@ -94,9 +94,9 @@ jobs:
       id: slack-message
       run: |
         if [ "${{ steps.create-pr.outputs.pull-request-url }}" == "" ]; then
-          echo "message=No changes detected." >> $GITHUB_OUTPUT
+          echo "name=message::No changes detected." >> $GITHUB_OUTPUT
         else
-          echo "message=PR ${{ steps.create-pr.outputs.pull-request-url }} has been ${{ steps.create-pr.outputs.pull-request-operation || 'updated' }}." >> $GITHUB_OUTPUT
+          echo "name=message::PR ${{ steps.create-pr.outputs.pull-request-url }} has been ${{ steps.create-pr.outputs.pull-request-operation || 'updated' }}." >> $GITHUB_OUTPUT
         fi
     - uses: 8398a7/action-slack@v3
       continue-on-error: true

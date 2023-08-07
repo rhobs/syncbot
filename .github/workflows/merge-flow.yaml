@@ -74,17 +74,17 @@ jobs:
       - name: Find github org name from repo name
         id: org
         run: |
-          echo "upstream=$(dirname ${{ inputs.upstream }})" >> $GITHUB_OUTPUT
-          echo "downstream=$(dirname ${{ inputs.downstream }})" >> $GITHUB_OUTPUT
-          echo "sandbox=$(dirname ${{ inputs.sandbox }})" >> $GITHUB_OUTPUT
+          echo "name=upstream::$(dirname ${{ inputs.upstream }})" >> $GITHUB_OUTPUT
+          echo "name=downstream::$(dirname ${{ inputs.downstream }})" >> $GITHUB_OUTPUT
+          echo "name=sandbox::$(dirname ${{ inputs.sandbox }})" >> $GITHUB_OUTPUT
       - name: Check openshift fork is upto date
         id: fork-sync
         run: |
           AHEAD_BY=$(curl -s "https://api.github.com/repos/${{ inputs.downstream }}/compare/{${{ inputs.downstream-branch }}}...{${{ steps.org.outputs.upstream }}:${{steps.upstream.outputs.release }}}" -o - | jq .ahead_by)
           if [ "${AHEAD_BY}" != "0" ]; then
-            echo "status=outdated" >> $GITHUB_OUTPUT
+            echo "name=status::outdated" >> $GITHUB_OUTPUT
           else
-            echo "status=uptodate" >> $GITHUB_OUTPUT
+            echo "name=status::uptodate" >> $GITHUB_OUTPUT
             exit 1
           fi
       - uses: actions/checkout@v2
@@ -101,7 +101,7 @@ jobs:
       - name: Merge with upstream ${{ steps.upstream.outputs.release }} tag
         id: merge
         run: |
-          git merge refs/tags/${{ steps.upstream.outputs.release }} --no-edit || echo 'MERGE_CONFLICT=true' >> $GITHUB_OUTPUT
+          git merge refs/tags/${{ steps.upstream.outputs.release }} --no-edit || echo 'name=MERGE_CONFLICT::true' >> $GITHUB_OUTPUT
       - name: Resolve conflict using upstream contents
         if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' && inputs.restore-upstream != ''}}
         run: |
@@ -203,9 +203,9 @@ jobs:
         id: slack-message
         run: |
           if [ "${{ steps.create-pr.outputs.pull-request-url }}" == "" ] || [ ${{ steps.fork-sync.outputs.status }} == "uptodate" ] ; then
-            echo "message=${{ inputs.downstream }} is already upto date with tag ${{ steps.upstream.outputs.release }}." >> $GITHUB_OUTPUT
+            echo "name=message::${{ inputs.downstream }} is already upto date with tag ${{ steps.upstream.outputs.release }}." >> $GITHUB_OUTPUT
           else
-            echo "message=PR ${{ steps.create-pr.outputs.pull-request-url }} has been ${{ steps.create-pr.outputs.pull-request-operation || 'updated' }}." >> $GITHUB_OUTPUT
+            echo "name=message::PR ${{ steps.create-pr.outputs.pull-request-url }} has been ${{ steps.create-pr.outputs.pull-request-operation || 'updated' }}." >> $GITHUB_OUTPUT
           fi
       - uses: 8398a7/action-slack@v3
         continue-on-error: true
