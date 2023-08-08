@@ -25,7 +25,7 @@ on:
         default: master
         type: string
       sandbox:
-        description: Sandbox repo path in owner/repo format. Used a base to create PR against downstream.
+        description: Sandbox repo path in owner/repo format. Used as a base to create PR against downstream.
         required: true
         type: string
       restore-upstream:
@@ -77,9 +77,29 @@ jobs:
           echo "upstream=$(dirname ${{ inputs.upstream }})" >> $GITHUB_OUTPUT
           echo "downstream=$(dirname ${{ inputs.downstream }})" >> $GITHUB_OUTPUT
           echo "sandbox=$(dirname ${{ inputs.sandbox }})" >> $GITHUB_OUTPUT
+          # assumes the presence of ./VERSION
+          DOWNSTREAM_VERSION=$(curl -sL "https://raw.githubusercontent.com/${{ inputs.downstream }}/${{ inputs.downstream-branch }}/VERSION")
+          echo "downstream-version=${DOWNSTREAM_VERSION}" >> $GITHUB_OUTPUT
+      - uses: madhead/semver-utils@latest
+        id: version
+        with:
+          version: ${{ steps.org.outputs.downstream-version }}
+          compare-to: ${{ steps.upstream.outputs.release }}
+          lenient: false # fail if either of the versions cannot be parsed
       - name: Check openshift fork is upto date
         id: fork-sync
         run: |
+          SEMVER_RESULT="${{ steps.version.outputs.comparison-result }}"
+          echo "${{ inputs.downstream }}@${{ steps.org.outputs.downstream-version }} ${SEMVER_RESULT} ${{ inputs.upstream }}@${{ steps.upstream.outputs.release }}"
+          if [ "${SEMVER_RESULT}" == "<" ]; then
+            echo "downstream outdated"
+          elif [ "${SEMVER_RESULT}" == "=" ]; then
+            echo "downstream up-to-date"
+            exit 1
+          else
+            echo "downstream ahead"
+            exit 1
+          fi
           AHEAD_BY=$(curl -s "https://api.github.com/repos/${{ inputs.downstream }}/compare/{${{ inputs.downstream-branch }}}...{${{ steps.org.outputs.upstream }}:${{steps.upstream.outputs.release }}}" -o - | jq .ahead_by)
           if [ "${AHEAD_BY}" != "0" ]; then
             echo "status=outdated" >> $GITHUB_OUTPUT
