@@ -92,11 +92,14 @@ jobs:
           SEMVER_RESULT="${{ steps.version.outputs.comparison-result }}"
           echo "${{ inputs.downstream }}@${{ steps.org.outputs.downstream-version }} ${SEMVER_RESULT} ${{ inputs.upstream }}@${{ steps.upstream.outputs.release }}"
           if [ "${SEMVER_RESULT}" == "<" ]; then
+            echo "status=outdated" >> $GITHUB_OUTPUT
             echo "downstream outdated"
           elif [ "${SEMVER_RESULT}" == "=" ]; then
+            echo "status=uptodate" >> $GITHUB_OUTPUT
             echo "downstream up-to-date"
             exit 1
           else
+            echo "status=ahead" >> $GITHUB_OUTPUT
             echo "downstream ahead"
             exit 1
           fi
