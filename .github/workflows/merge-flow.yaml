@@ -43,6 +43,11 @@ on:
         required: false
         default: ''
         type: string
+      downstream-version-expression:
+        description: Expression to extract downstream version from downstream repo.
+        required: false
+        default: ''
+        type: string
     secrets:
       cloner-app-id:
         description: Github ID of cloner app
@@ -67,18 +72,35 @@ jobs:
     steps:
       - name: Get latest upstream tag
         id: upstream
-        uses: pozetroninc/github-action-get-latest-release@master
-        with:
-          repository: ${{ inputs.upstream }}
-          excludes: prerelease, draft
+        run: |
+          UPSTREAM_VERSION=$(curl --fail --silent "https://api.github.com/repos/${{ inputs.upstream }}/releases/latest" | jq -r '.tag_name')
+          if [ "$UPSTREAM_VERSION" == "" ]; then
+              echo "upstream-version is invalid" >> "$GITHUB_OUTPUT"
+              exit 1
+          fi
+          echo "release=${UPSTREAM_VERSION}" >> "$GITHUB_OUTPUT"
       - name: Find github org name from repo name
         id: org
         run: |
           echo "upstream=$(dirname ${{ inputs.upstream }})" >> $GITHUB_OUTPUT
           echo "downstream=$(dirname ${{ inputs.downstream }})" >> $GITHUB_OUTPUT
           echo "sandbox=$(dirname ${{ inputs.sandbox }})" >> $GITHUB_OUTPUT
-          # assumes the presence of ./VERSION
           DOWNSTREAM_VERSION=$(curl -sL "https://raw.githubusercontent.com/${{ inputs.downstream }}/${{ inputs.downstream-branch }}/VERSION")
+          if [ "${DOWNSTREAM_VERSION}" == "" ]; then
+            # Strip the trailing URL from the expression.
+            DOWNSTREAM_VERSION_SED=$(echo "${{ inputs.downstream-version-expression }}" | sed -e 's/\(http[^ ]*\).*$/\1/' -e 's/http[^ ]*$//')
+            # Strip the leading sed command from the expression.
+            DOWNSTREAM_VERSION_URL=$(echo "${{ inputs.downstream-version-expression }}" | sed -n 's/^.*\(http[^ ]*\).*$/\1/p')
+            if [ "${DOWNSTREAM_VERSION_SED}" == "" ] || [ "${DOWNSTREAM_VERSION_URL}" == "" ]; then
+              echo "::error::downstream-version-expression is invalid"
+              exit 1
+            fi
+            DOWNSTREAM_VERSION=$(curl --silent "${DOWNSTREAM_VERSION_URL}" | eval "${DOWNSTREAM_VERSION_SED}")
+            if [ "${DOWNSTREAM_VERSION}" == "" ]; then
+              echo "::error::downstream-version-expression is invalid"
+              exit 1
+            fi
+          fi
           echo "downstream-version=${DOWNSTREAM_VERSION}" >> $GITHUB_OUTPUT
       - uses: madhead/semver-utils@latest
         id: version
@@ -86,28 +108,21 @@ jobs:
           version: ${{ steps.org.outputs.downstream-version }}
           compare-to: ${{ steps.upstream.outputs.release }}
           lenient: false # fail if either of the versions cannot be parsed
-      - name: Check openshift fork is upto date
+      - name: Check openshift fork status
         id: fork-sync
         run: |
           SEMVER_RESULT="${{ steps.version.outputs.comparison-result }}"
           echo "${{ inputs.downstream }}@${{ steps.org.outputs.downstream-version }} ${SEMVER_RESULT} ${{ inputs.upstream }}@${{ steps.upstream.outputs.release }}"
           if [ "${SEMVER_RESULT}" == "<" ]; then
             echo "status=outdated" >> $GITHUB_OUTPUT
-            echo "downstream outdated"
+            echo "::notice::downstream outdated"
           elif [ "${SEMVER_RESULT}" == "=" ]; then
             echo "status=uptodate" >> $GITHUB_OUTPUT
-            echo "downstream up-to-date"
+            echo "::notice::downstream up-to-date"
             exit 1
           else
             echo "status=ahead" >> $GITHUB_OUTPUT
-            echo "downstream ahead"
-            exit 1
-          fi
-          AHEAD_BY=$(curl -s "https://api.github.com/repos/${{ inputs.downstream }}/compare/{${{ inputs.downstream-branch }}}...{${{ steps.org.outputs.upstream }}:${{steps.upstream.outputs.release }}}" -o - | jq .ahead_by)
-          if [ "${AHEAD_BY}" != "0" ]; then
-            echo "status=outdated" >> $GITHUB_OUTPUT
-          else
-            echo "status=uptodate" >> $GITHUB_OUTPUT
+            echo "::notice::downstream ahead"
             exit 1
           fi
       - uses: actions/checkout@v2
@@ -226,7 +241,7 @@ jobs:
         id: slack-message
         run: |
           if [ "${{ steps.create-pr.outputs.pull-request-url }}" == "" ] || [ ${{ steps.fork-sync.outputs.status }} == "uptodate" ] || [ ${{ steps.fork-sync.outputs.status }} == "ahead" ] ; then
-            echo "message=${{ inputs.downstream }} is already ${{ steps.fork-sync.outputs.status }} with tag ${{ steps.upstream.outputs.release }}." >> $GITHUB_OUTPUT
+            echo "message=${{ inputs.downstream }} is already ${{ steps.fork-sync.outputs.status }} with tag ${{ steps.org.outputs.downstream-version }}." >> $GITHUB_OUTPUT
           else
             echo "message=PR ${{ steps.create-pr.outputs.pull-request-url }} has been ${{ steps.create-pr.outputs.pull-request-operation || 'updated' }}." >> $GITHUB_OUTPUT
           fi
