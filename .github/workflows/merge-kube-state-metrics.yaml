@@ -4,10 +4,18 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 0 * * *' #@daily
+  pull_request:
+    paths:
+    - '.github/workflows/merge-flow.yaml'
+    - '.github/workflows/merge-kube-state-metrics.yaml'
+  push:
+    paths:
+    - '.github/workflows/merge-flow.yaml'
+    - '.github/workflows/merge-kube-state-metrics.yaml'
 
 jobs:
   kube-state-metrics-merge:
-    uses: rhobs/syncbot/.github/workflows/merge-flow.yaml@main
+    uses: ./.github/workflows/merge-flow.yaml
     with:
       upstream: kubernetes/kube-state-metrics
       downstream: openshift/kube-state-metrics

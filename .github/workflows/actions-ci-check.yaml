@@ -1,5 +1,5 @@
 name: Actions yaml CI check
-on: [pull_request]
+on: [push, pull_request]
 jobs:
   actionlint:
     runs-on: ubuntu-latest

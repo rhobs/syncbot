@@ -4,9 +4,17 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 0 * * *' #@daily
+  pull_request:
+    paths:
+    - '.github/workflows/merge-flow.yaml'
+    - '.github/workflows/merge-prom-label-proxy.yaml'
+  push:
+    paths:
+    - '.github/workflows/merge-flow.yaml'
+    - '.github/workflows/merge-prom-label-proxy.yaml'
 jobs:
   prom-label-proxy-merge:
-    uses: rhobs/syncbot/.github/workflows/merge-flow.yaml@main
+    uses: ./.github/workflows/merge-flow.yaml
     with:
       upstream: prometheus-community/prom-label-proxy
       downstream: openshift/prom-label-proxy
