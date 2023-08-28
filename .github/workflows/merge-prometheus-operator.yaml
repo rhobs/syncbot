@@ -4,9 +4,17 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 0 * * *' #@daily
+  pull_request:
+    paths:
+    - '.github/workflows/merge-flow.yaml'
+    - '.github/workflows/merge-prometheus-operator.yaml'
+  push:
+    paths:
+    - '.github/workflows/merge-flow.yaml'
+    - '.github/workflows/merge-prometheus-operator.yaml'
 jobs:
   prometheus-operator-merge:
-    uses: rhobs/syncbot/.github/workflows/merge-flow.yaml@main
+    uses: ./.github/workflows/merge-flow.yaml
     with:
       upstream: prometheus-operator/prometheus-operator
       downstream: openshift/prometheus-operator

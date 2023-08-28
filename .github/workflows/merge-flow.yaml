@@ -86,7 +86,7 @@ jobs:
           echo "downstream=$(dirname ${{ inputs.downstream }})" >> $GITHUB_OUTPUT
           echo "sandbox=$(dirname ${{ inputs.sandbox }})" >> $GITHUB_OUTPUT
           DOWNSTREAM_VERSION=$(curl -sL "https://raw.githubusercontent.com/${{ inputs.downstream }}/${{ inputs.downstream-branch }}/VERSION")
-          if [ "${DOWNSTREAM_VERSION}" == "" ]; then
+          if [[ "${DOWNSTREAM_VERSION}" =~ ^$|"404: Not Found" ]]; then
             # Strip the trailing URL from the expression.
             DOWNSTREAM_VERSION_SED=$(echo "${{ inputs.downstream-version-expression }}" | sed -e 's/\(http[^ ]*\).*$/\1/' -e 's/http[^ ]*$//')
             # Strip the leading sed command from the expression.
@@ -96,7 +96,7 @@ jobs:
               exit 1
             fi
             DOWNSTREAM_VERSION=$(curl --silent "${DOWNSTREAM_VERSION_URL}" | eval "${DOWNSTREAM_VERSION_SED}")
-            if [ "${DOWNSTREAM_VERSION}" == "" ]; then
+            if ! [[ "${DOWNSTREAM_VERSION}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
               echo "::error::downstream-version-expression is invalid"
               exit 1
             fi
@@ -119,11 +119,11 @@ jobs:
           elif [ "${SEMVER_RESULT}" == "=" ]; then
             echo "status=uptodate" >> $GITHUB_OUTPUT
             echo "::notice::downstream up-to-date"
-            exit 1
+            exit 0
           else
             echo "status=ahead" >> $GITHUB_OUTPUT
             echo "::notice::downstream ahead"
-            exit 1
+            exit 0
           fi
       - uses: actions/checkout@v2
         with:
@@ -188,6 +188,7 @@ jobs:
             git diff --cached --exit-code || git commit -s -m "[bot] update rh-manifest.txt"
           fi
       - name: Get auth token to create pull request for ${{ inputs.downstream }}
+        if: github.event_name != 'pull_request'
         id: pr
         uses: getsentry/action-github-app-token@v1
         with:
@@ -195,6 +196,7 @@ jobs:
           private_key: ${{ secrets.pr-app-private-key }}
           scope: ${{ steps.org.outputs.downstream }}
       - name: Get auth token to push to ${{ inputs.sandbox }}
+        if: github.event_name != 'pull_request'
         id: cloner
         uses: getsentry/action-github-app-token@v1
         with:
@@ -202,6 +204,7 @@ jobs:
           private_key: ${{ secrets.cloner-app-private-key }}
           scope: ${{ steps.org.outputs.sandbox }}
       - name: Create Pull Request
+        if: github.event_name != 'pull_request'
         uses: rhobs/create-pull-request@v3
         id: create-pr
         with:
@@ -236,8 +239,8 @@ jobs:
           push-to-fork: ${{ inputs.sandbox }}
           push-to-fork-token: ${{ steps.cloner.outputs.token }}
       - name: Compose slack message body
+        if: github.event_name != 'pull_request' && (success() || steps.fork-sync.outputs.status == 'uptodate' || steps.fork-sync.outputs.status == 'ahead')
         continue-on-error: true
-        if: success() || steps.fork-sync.outputs.status == 'uptodate' || steps.fork-sync.outputs.status == 'ahead'
         id: slack-message
         run: |
           if [ "${{ steps.create-pr.outputs.pull-request-url }}" == "" ] || [ ${{ steps.fork-sync.outputs.status }} == "uptodate" ] || [ ${{ steps.fork-sync.outputs.status }} == "ahead" ] ; then
@@ -246,8 +249,8 @@ jobs:
             echo "message=PR ${{ steps.create-pr.outputs.pull-request-url }} has been ${{ steps.create-pr.outputs.pull-request-operation || 'updated' }}." >> $GITHUB_OUTPUT
           fi
       - uses: 8398a7/action-slack@v3
+        if: github.event_name != 'pull_request' && (success() || steps.fork-sync.outputs.status == 'uptodate' || steps.fork-sync.outputs.status == 'ahead')
         continue-on-error: true
-        if: success() || steps.fork-sync.outputs.status == 'uptodate' || steps.fork-sync.outputs.status == 'ahead'
         with:
           status: custom
           fields: workflow
@@ -261,8 +264,8 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.slack-webhook-url }}
       - uses: 8398a7/action-slack@v3
+        if: github.event_name != 'pull_request' && (failure() && steps.fork-sync.outputs.status != 'uptodate' && steps.fork-sync.outputs.status != 'ahead')
         continue-on-error: true
-        if: failure() && steps.fork-sync.outputs.status != 'uptodate' && steps.fork-sync.outputs.status != 'ahead'
         with:
           status: custom
           fields: workflow

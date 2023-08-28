@@ -4,15 +4,23 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 0 * * *' #@daily
+  pull_request:
+    paths:
+    - '.github/workflows/merge-flow.yaml'
+    - '.github/workflows/merge-metrics-server.yaml'
+  push:
+    paths:
+    - '.github/workflows/merge-flow.yaml'
+    - '.github/workflows/merge-metrics-server.yaml'
 
 jobs:
   metrics-server-merge:
-    uses: rhobs/syncbot/.github/workflows/merge-flow.yaml@main
+    uses: ./.github/workflows/merge-flow.yaml
     with:
       upstream: kubernetes-sigs/metrics-server
       downstream: openshift/kubernetes-metrics-server
       sandbox: rhobs/kubernetes-metrics-server
-      go-version: 1.20
+      go-version: "1.20"
       restore-downstream: OWNERS charts/OWNERS
       downstream-version-expression: |
         sed -n -E 's/^.*newTag: *(v[0-9]+\.[0-9]+\.[0-9]+).*$/\1/p' https://raw.githubusercontent.com/openshift/kubernetes-metrics-server/master/manifests/release/kustomization.yaml
