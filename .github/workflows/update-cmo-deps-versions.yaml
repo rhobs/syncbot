@@ -15,7 +15,11 @@ jobs:
       pr-title: "[bot] Synchronize versions of the downstream components"
       pr-body: |
         ## Description
-        This pull request updates `jsonnet/versions.yaml` to match with the downstream versions of the monitoring components and regenerates all assets.
+        This pull request updates `jsonnet/versions.yaml` to match with the **already in use** downstream versions of the monitoring components.
+
+        Based on that file, it regenerates the assets to update some metadata (mainly the `app.kubernetes.io/version` annotation) attached to some of the resources and update other placeholders.
+
+        **It is safe to merge this change (provided that the CI jobs pass).**
 
         If you wish to perform this manually, execute the following commands from cluster-monitoring-operator repository:
         ```
