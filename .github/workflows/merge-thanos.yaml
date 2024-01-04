@@ -29,6 +29,7 @@ jobs:
         pkg
         tutorials
         .busybox-versions
+        .devcontainer
     secrets:
       pr-app-id: ${{ secrets.APP_ID }}
       pr-app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
