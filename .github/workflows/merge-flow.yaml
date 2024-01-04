@@ -212,7 +212,8 @@ jobs:
           body: |
             ## Description
             This is an automated version bump from CI.
-            If you wish to perform this manually, execute the following commands from ${{ inputs.downstream }} repo,
+            The logs for this run can be found [in the syncbot repo actions](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
+            If you wish to perform this manually, execute the following commands from ${{ inputs.downstream }} repo:
             ```
             git fetch https://github.com/${{ inputs.upstream }} --tags
             if ! git merge refs/tags/${{ steps.upstream.outputs.release }} --no-edit; then
