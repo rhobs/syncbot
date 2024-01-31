@@ -23,7 +23,7 @@ jobs:
       go-version: "1.20"
       restore-downstream: OWNERS charts/OWNERS
       downstream-version-expression: |
-        sed -n -E 's/^.*newTag: *(v[0-9]+\.[0-9]+\.[0-9]+).*$/\1/p' https://raw.githubusercontent.com/openshift/kubernetes-metrics-server/master/manifests/release/kustomization.yaml
+        sed -n -E 's/^.*newTag: *(v[0-9]+\.[0-9]+\.[0-9]+).*$/\1/p' https://raw.githubusercontent.com/openshift/kubernetes-metrics-server/master/manifests/components/release/kustomization.yaml
     secrets:
       pr-app-id: ${{ secrets.APP_ID }}
       pr-app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
