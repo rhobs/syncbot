@@ -1,0 +1,45 @@
+name: Prometheus merger
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *' #@daily
+  pull_request:
+    paths:
+    - '.github/workflows/merge-acm-flow.yaml'
+    - '.github/workflows/merge-acm-prometheus.yaml'
+  push:
+    paths:
+    - '.github/workflows/merge-acm-flow.yaml'
+    - '.github/workflows/merge-acm-prometheus.yaml'
+jobs:
+  prometheus-merge:
+    uses: ./.github/workflows/merge-acm-flow.yaml
+    with:
+      upstream: prometheus/prometheus
+      downstream: stolostron/prometheus
+      sandbox: rhobs/prometheus
+      go-version: "1.21"
+      restore-upstream: >-
+        CHANGELOG.md
+        VERSION
+        go.mod
+        go.sum
+        .golangci.yml
+      assets-cmd: |
+        # Only compress assets if assets actually changed
+        # The git diff relies on gits remote naming. The merge-flow checks out
+        # $downstream as origin at the time of writing this code.
+        if ! git diff --exit-code origin/master web/ui; then
+          make assets-compress
+          find web/ui/static -type f -name '*.gz' -exec git add {} \;
+          git add web/ui/embed.go
+          git diff --cached --exit-code || git commit -s -m "[bot] assets: generate"
+        fi
+
+    secrets:
+      pr-app-id: ${{ secrets.ACM_APP_ID }}
+      pr-app-private-key: ${{ secrets.ACM_APP_PRIVATE_KEY }}
+      cloner-app-id: ${{ secrets.ACM_CLONER_APP_ID }}
+      cloner-app-private-key: ${{ secrets.ACM_CLONER_APP_PRIVATE_KEY }}
+      slack-webhook-url: ${{ secrets.ACM_SLACK_WEBHOOK_URL }}
