@@ -33,7 +33,7 @@ jobs:
         if ! git diff --exit-code origin/main web/ui; then
           make assets-compress
           find web/ui/static -type f -name '*.gz' -exec git add -f {} \;
-          git add web/ui/embed.go
+          git add -f web/ui/embed.go
           git diff --cached --exit-code || git commit -s -m "[bot] assets: generate"
         fi
 
