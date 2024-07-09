@@ -190,19 +190,11 @@ jobs:
       - name: go mod tidy + vendor
         run: |
           go mod tidy
-          go mod vendor
-          git add go.mod go.sum vendor
-          git diff --cached --exit-code || git commit -s -m "[bot] vendor: revendor"
+          git add go.mod go.sum 
+          git diff --cached --exit-code || git commit -s -m "[bot]go mod tidy"
       - name: Generate assets
         if: ${{ inputs.assets-cmd != '' }}
         run: ${{ inputs.assets-cmd }}
-      - name: Generate rh-manifest.txt
-        run: |
-          if [ -f scripts/rh-manifest.sh ]; then
-            bash scripts/rh-manifest.sh
-            git add rh-manifest.txt
-            git diff --cached --exit-code || git commit -s -m "[bot] update rh-manifest.txt"
-          fi
       - name: Get auth token to create pull request for ${{ inputs.downstream }}
         if: github.event_name != 'pull_request'
         id: pr
