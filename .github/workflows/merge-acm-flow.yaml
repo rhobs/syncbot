@@ -242,7 +242,7 @@ jobs:
           author: 'github-actions[bot]<github-actions[bot]@users.noreply.github.com>'
           committer: 'github-actions[bot]<github-actions[bot]@users.noreply.github.com>'
           signoff: true
-          branch: automated-updates-${{ inputs.downstream-branch }}
+          branch: automated-updates-acm-${{ inputs.downstream-branch }}
           delete-branch: true
           token: ${{ steps.pr.outputs.token }}
           push-to-fork: ${{ inputs.sandbox }}
