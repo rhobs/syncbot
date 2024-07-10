@@ -125,7 +125,7 @@ jobs:
             echo "::notice::downstream ahead"
             exit 0
           fi
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           repository: ${{ inputs.downstream }}
           fetch-depth: 0
@@ -181,12 +181,12 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ inputs.node-version }}
-      - name: Remove dependabot configuration
-        run: |
-          if [ -f .github/dependabot.yml ]; then
-            git rm -f .github/dependabot.yml
-            git commit -s -m "[bot] remove dependabot config"
-          fi
+#      - name: Remove dependabot configuration
+#        run: |
+#          if [ -f .github/dependabot.yml ]; then
+#            git rm -f .github/dependabot.yml
+#            git commit -s -m "[bot] remove dependabot config"
+#          fi
       - name: go mod tidy + vendor
         run: |
           go mod tidy

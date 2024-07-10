@@ -1,0 +1,37 @@
+name: ACM Prometheus Operator merger
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *' #@daily
+  pull_request:
+    paths:
+    - '.github/workflows/merge-acm-flow.yaml'
+    - '.github/workflows/merge-acm-prometheus-operator.yaml'
+  push:
+    paths:
+    - '.github/workflows/merge-acm-flow.yaml'
+    - '.github/workflows/merge-acm-prometheus-operator.yaml'
+jobs:
+  acm-prometheus-operator-merge:
+    uses: ./.github/workflows/merge-acm-flow.yaml
+    with:
+      upstream: prometheus-operator/prometheus-operator
+      downstream: stolostron/prometheus-operator
+      sandbox: rhobs/prometheus-operator
+      go-version: "1.21"
+      restore-upstream: >-
+        CHANGELOG.md
+        Documentation
+        VERSION
+        bundle.yaml
+        example
+        go.mod
+        go.sum
+        pkg
+    secrets:
+      pr-app-id: ${{ secrets.ACM_APP_ID }}
+      pr-app-private-key: ${{ secrets.ACM_APP_PRIVATE_KEY }}
+      cloner-app-id: ${{ secrets.ACM_CLONER_APP_ID }}
+      cloner-app-private-key: ${{ secrets.ACM_CLONER_APP_PRIVATE_KEY }}
+      slack-webhook-url: ${{ secrets.ACM_SLACK_WEBHOOK_URL }}
