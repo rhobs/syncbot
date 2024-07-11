@@ -29,6 +29,7 @@ jobs:
         go.mod
         go.sum
         pkg
+        cmd
     secrets:
       pr-app-id: ${{ secrets.ACM_APP_ID }}
       pr-app-private-key: ${{ secrets.ACM_APP_PRIVATE_KEY }}

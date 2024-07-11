@@ -139,13 +139,17 @@ jobs:
       - name: Merge with upstream ${{ steps.upstream.outputs.release }} tag
         id: merge
         run: |
-          git merge refs/tags/${{ steps.upstream.outputs.release }} --no-edit || echo 'MERGE_CONFLICT=true' >> $GITHUB_OUTPUT
+          git merge -X theirs refs/tags/${{ steps.upstream.outputs.release }} --no-edit || echo 'MERGE_CONFLICT=true' >> $GITHUB_OUTPUT
       - name: Resolve conflict using upstream contents
         if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' && inputs.restore-upstream != ''}}
         run: |
-            echo "reset ${{ inputs.restore-upstream }}"
-            git checkout --theirs ${{ inputs.restore-upstream }}
-            git add ${{ inputs.restore-upstream }}
+          echo "reset ${{ inputs.restore-upstream }}"
+          git checkout --theirs ${{ inputs.restore-upstream }} || true
+          git add ${{ inputs.restore-upstream }} || true
+      - name: Remove deleted files
+        if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' }}
+        run: |
+          git diff --name-only --diff-filter=D | xargs -r git rm
       - name: Resolve conflict using downstream contents
         if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' && inputs.restore-downstream != ''}}
         run: |
@@ -181,12 +185,6 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ inputs.node-version }}
-#      - name: Remove dependabot configuration
-#        run: |
-#          if [ -f .github/dependabot.yml ]; then
-#            git rm -f .github/dependabot.yml
-#            git commit -s -m "[bot] remove dependabot config"
-#          fi
       - name: go mod tidy + vendor
         run: |
           go mod tidy
