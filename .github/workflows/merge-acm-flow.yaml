@@ -1,0 +1,287 @@
+name: Common merge flow
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: node version
+        default: '16'
+        required: false
+        type: string
+      go-version:
+        description: go version
+        required: true
+        type: string
+      upstream:
+        description: Upstream repo path in owner/repo format
+        required: true
+        type: string
+      downstream:
+        description: Downstream repo path in owner/repo format
+        required: true
+        type: string
+      downstream-branch:
+        description: Downstream branch to create PR
+        required: false
+        default: release-2.12
+        type: string
+      sandbox:
+        description: Sandbox repo path in owner/repo format. Used as a base to create PR against downstream.
+        required: true
+        type: string
+      restore-upstream:
+        description: List of files to be reset using upstream content on merge conflict.
+        required: false
+        default: ''
+        type: string
+      restore-downstream:
+        description: List of files to be reset using downstream content on merge conflict.
+        required: false
+        default: ''
+        type: string
+      assets-cmd:
+        description: Commands which generates assets.
+        required: false
+        default: ''
+        type: string
+      downstream-version-expression:
+        description: Expression to extract downstream version from downstream repo.
+        required: false
+        default: ''
+        type: string
+    secrets:
+      cloner-app-id:
+        description: Github ID of cloner app
+        required: true
+      cloner-app-private-key:
+        description: Github private key of cloner app
+        required: true
+      pr-app-id:
+        description: Github ID of PR creation app
+        required: true
+      pr-app-private-key:
+        description: Github private key of PR creation app
+        required: true
+      slack-webhook-url:
+        description: Slack webhook URL to send notification
+        required: true
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    name: Perform merge operation
+    steps:
+      - name: Get latest upstream tag
+        id: upstream
+        run: |
+          UPSTREAM_VERSION=$(curl --fail --silent "https://api.github.com/repos/${{ inputs.upstream }}/releases/latest" | jq -r '.tag_name')
+          if [ "$UPSTREAM_VERSION" == "" ]; then
+              echo "upstream-version is invalid" >> "$GITHUB_OUTPUT"
+              exit 1
+          fi
+          echo "release=${UPSTREAM_VERSION}" >> "$GITHUB_OUTPUT"
+      - name: Find github org name from repo name
+        id: org
+        run: |
+          echo "upstream=$(dirname ${{ inputs.upstream }})" >> $GITHUB_OUTPUT
+          echo "downstream=$(dirname ${{ inputs.downstream }})" >> $GITHUB_OUTPUT
+          echo "sandbox=$(dirname ${{ inputs.sandbox }})" >> $GITHUB_OUTPUT
+          DOWNSTREAM_VERSION=$(curl -sL "https://raw.githubusercontent.com/${{ inputs.downstream }}/${{ inputs.downstream-branch }}/VERSION")
+          if [[ "${DOWNSTREAM_VERSION}" =~ ^$|"404: Not Found" ]]; then
+            # Strip the trailing URL from the expression.
+            DOWNSTREAM_VERSION_SED=$(echo "${{ inputs.downstream-version-expression }}" | sed -e 's/\(http[^ ]*\).*$/\1/' -e 's/http[^ ]*$//')
+            # Strip the leading sed command from the expression.
+            DOWNSTREAM_VERSION_URL=$(echo "${{ inputs.downstream-version-expression }}" | sed -n 's/^.*\(http[^ ]*\).*$/\1/p')
+            if [ "${DOWNSTREAM_VERSION_SED}" == "" ] || [ "${DOWNSTREAM_VERSION_URL}" == "" ]; then
+              echo "::error::downstream-version-expression is invalid"
+              exit 1
+            fi
+            DOWNSTREAM_VERSION=$(curl --silent "${DOWNSTREAM_VERSION_URL}" | eval "${DOWNSTREAM_VERSION_SED}")
+            if ! [[ "${DOWNSTREAM_VERSION}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "::error::downstream-version-expression is invalid"
+              exit 1
+            fi
+          fi
+          echo "downstream-version=${DOWNSTREAM_VERSION}" >> $GITHUB_OUTPUT
+      - uses: madhead/semver-utils@latest
+        id: version
+        with:
+          version: ${{ steps.org.outputs.downstream-version }}
+          compare-to: ${{ steps.upstream.outputs.release }}
+          lenient: false # fail if either of the versions cannot be parsed
+      - name: Check openshift fork status
+        id: fork-sync
+        run: |
+          SEMVER_RESULT="${{ steps.version.outputs.comparison-result }}"
+          echo "${{ inputs.downstream }}@${{ steps.org.outputs.downstream-version }} ${SEMVER_RESULT} ${{ inputs.upstream }}@${{ steps.upstream.outputs.release }}"
+          if [ "${SEMVER_RESULT}" == "<" ]; then
+            echo "status=outdated" >> $GITHUB_OUTPUT
+            echo "::notice::downstream outdated"
+          elif [ "${SEMVER_RESULT}" == "=" ]; then
+            echo "status=uptodate" >> $GITHUB_OUTPUT
+            echo "::notice::downstream up-to-date"
+            exit 0
+          else
+            echo "status=ahead" >> $GITHUB_OUTPUT
+            echo "::notice::downstream ahead"
+            exit 0
+          fi
+      - uses: actions/checkout@v3
+        with:
+          repository: ${{ inputs.downstream }}
+          fetch-depth: 0
+          ref: ${{ inputs.downstream-branch }}
+      - name: Fetch all upstream tags
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git config --global core.editor "/bin/true"
+          git fetch https://github.com/${{ inputs.upstream }} --tags
+      - name: Merge with upstream ${{ steps.upstream.outputs.release }} tag
+        id: merge
+        run: |
+          git merge -X theirs refs/tags/${{ steps.upstream.outputs.release }} --no-edit || echo 'MERGE_CONFLICT=true' >> $GITHUB_OUTPUT
+      - name: Resolve conflict using upstream contents
+        if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' && inputs.restore-upstream != ''}}
+        run: |
+          echo "reset ${{ inputs.restore-upstream }}"
+          git checkout --theirs ${{ inputs.restore-upstream }} || true
+          git add ${{ inputs.restore-upstream }} || true
+      - name: Remove deleted files
+        if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' }}
+        run: |
+          git diff --name-only --diff-filter=D | xargs -r git rm
+      - name: Resolve conflict using downstream contents
+        if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' && inputs.restore-downstream != ''}}
+        run: |
+            echo "reset ${{ inputs.restore-downstream }}"
+            git checkout --ours ${{ inputs.restore-downstream }}
+            git add ${{ inputs.restore-downstream }}
+      - name: Resolve conflict due to deleted downstream files
+        if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' }}
+        run: |
+            git status --porcelain | awk '{ if ($1=="DU") print $2 }' | xargs -I {} git rm {}
+      - name: Continue after merge conflict
+        if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' }}
+        run: git merge --continue
+      - name: Add VERSION file if not present
+        run: |
+          # All tags use the vX.Y.Z format currently.
+          version_from_tag=$(echo ${{ steps.upstream.outputs.release }} | sed -e "s/^v//")
+          if [ -f VERSION ]; then
+            version_from_file=$(cat VERSION)
+            if [ "$version_from_tag" != "$version_from_file" ];then
+              echo "::error:: tag version ${version_from_tag} doesn't correspond to version ${version_from_file} from VERSION file"
+              exit 1
+            fi
+            echo "::notice::VERSION file already present"
+            exit 0
+          fi
+          echo "$version_from_tag" > VERSION
+          git add VERSION
+          git diff --cached --exit-code || git commit -s -m "[bot] add VERSION file with ${version_from_tag}"
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ${{ inputs.go-version }}
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ inputs.node-version }}
+      - name: go mod tidy + vendor
+        run: |
+          go mod tidy
+          git add go.mod go.sum 
+          git diff --cached --exit-code || git commit -s -m "[bot]go mod tidy"
+      - name: Generate assets
+        if: ${{ inputs.assets-cmd != '' }}
+        run: ${{ inputs.assets-cmd }}
+      - name: Get auth token to create pull request for ${{ inputs.downstream }}
+        if: github.event_name != 'pull_request'
+        id: pr
+        uses: getsentry/action-github-app-token@v1
+        with:
+          app_id: ${{ secrets.pr-app-id }}
+          private_key: ${{ secrets.pr-app-private-key }}
+          scope: ${{ steps.org.outputs.downstream }}
+      - name: Get auth token to push to ${{ inputs.sandbox }}
+        if: github.event_name != 'pull_request'
+        id: cloner
+        uses: getsentry/action-github-app-token@v1
+        with:
+          app_id: ${{ secrets.cloner-app-id }}
+          private_key: ${{ secrets.cloner-app-private-key }}
+          scope: ${{ steps.org.outputs.sandbox }}
+      - name: Create Pull Request
+        if: github.event_name != 'pull_request'
+        uses: rhobs/create-pull-request@v3
+        id: create-pr
+        with:
+          title: "[bot] Bump ${{ inputs.downstream }} to ${{ steps.upstream.outputs.release }}"
+          body: |
+            ## Description
+            This is an automated version bump from CI.
+            The logs for this run can be found [in the syncbot repo actions](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
+            If you wish to perform this manually, execute the following commands from ${{ inputs.downstream }} repo:
+            ```
+            git fetch https://github.com/${{ inputs.upstream }} --tags
+            if ! git merge refs/tags/${{ steps.upstream.outputs.release }} --no-edit; then
+              git checkout --theirs ${{ inputs.restore-upstream }}
+              git checkout --ours ${{ inputs.restore-downstream }}
+              git add ${{ inputs.restore-upstream }} ${{ inputs.restore-downstream }}
+              git merge --continue
+            fi
+            go mod tidy
+            go mod vendor
+            ${{ inputs.assets-cmd }}
+            if [ -f scripts/rh-manifest.sh ]; then
+              bash scripts/rh-manifest.sh
+              git add rh-manifest.txt
+              git diff --cached --exit-code || git commit -s -m "[bot] update rh-manifest.txt"
+            fi
+            ```
+          author: 'github-actions[bot]<github-actions[bot]@users.noreply.github.com>'
+          committer: 'github-actions[bot]<github-actions[bot]@users.noreply.github.com>'
+          signoff: true
+          branch: automated-updates-acm-${{ inputs.downstream-branch }}
+          delete-branch: true
+          token: ${{ steps.pr.outputs.token }}
+          push-to-fork: ${{ inputs.sandbox }}
+          push-to-fork-token: ${{ steps.cloner.outputs.token }}
+      - name: Compose slack message body
+        if: github.event_name != 'pull_request' && (success() || steps.fork-sync.outputs.status == 'uptodate' || steps.fork-sync.outputs.status == 'ahead')
+        continue-on-error: true
+        id: slack-message
+        run: |
+          if [ "${{ steps.create-pr.outputs.pull-request-url }}" == "" ] || [ ${{ steps.fork-sync.outputs.status }} == "uptodate" ] || [ ${{ steps.fork-sync.outputs.status }} == "ahead" ] ; then
+            echo "message=${{ inputs.downstream }} is already ${{ steps.fork-sync.outputs.status }} with tag ${{ steps.org.outputs.downstream-version }}." >> $GITHUB_OUTPUT
+          else
+            echo "message=PR ${{ steps.create-pr.outputs.pull-request-url }} has been ${{ steps.create-pr.outputs.pull-request-operation || 'updated' }}." >> $GITHUB_OUTPUT
+          fi
+      - uses: 8398a7/action-slack@v3
+        if: github.event_name != 'pull_request' && (success() || steps.fork-sync.outputs.status == 'uptodate' || steps.fork-sync.outputs.status == 'ahead')
+        continue-on-error: true
+        with:
+          status: custom
+          fields: workflow
+          custom_payload: |
+            {
+              attachments: [{
+                color: 'good',
+                text: `${process.env.AS_WORKFLOW}\n ${{ steps.slack-message.outputs.message }}`,
+              }]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.slack-webhook-url }}
+      - uses: 8398a7/action-slack@v3
+        if: github.event_name != 'pull_request' && (failure() && steps.fork-sync.outputs.status != 'uptodate' && steps.fork-sync.outputs.status != 'ahead')
+        continue-on-error: true
+        with:
+          status: custom
+          fields: workflow
+          custom_payload: |
+            {
+              attachments: [{
+                color: 'danger',
+                text: `${process.env.AS_WORKFLOW} has failed.`,
+              }]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.slack-webhook-url }}
