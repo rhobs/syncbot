@@ -2,16 +2,16 @@ name: ACM Prometheus merger
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 0 * * *' #@daily
-  pull_request:
-    paths:
-    - '.github/workflows/merge-acm-flow.yaml'
-    - '.github/workflows/merge-acm-prometheus.yaml'
-  push:
-    paths:
-    - '.github/workflows/merge-acm-flow.yaml'
-    - '.github/workflows/merge-acm-prometheus.yaml'
+#  schedule:
+#    - cron: '0 0 * * *' #@daily
+#  pull_request:
+#    paths:
+#    - '.github/workflows/merge-acm-flow.yaml'
+#    - '.github/workflows/merge-acm-prometheus.yaml'
+#  push:
+#    paths:
+#    - '.github/workflows/merge-acm-flow.yaml'
+#    - '.github/workflows/merge-acm-prometheus.yaml'
 jobs:
   acm-prometheus-merge:
     uses: ./.github/workflows/merge-acm-flow.yaml
