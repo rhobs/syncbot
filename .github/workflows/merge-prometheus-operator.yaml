@@ -3,7 +3,7 @@ name: Prometheus Operator merger
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 * * * *' #@hourly
+    - cron: '0 0 * * *' #@daily
   pull_request:
     paths:
     - '.github/workflows/merge-flow.yaml'
