@@ -125,7 +125,7 @@ jobs:
             echo "::notice::downstream ahead"
             exit 0
           fi
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: ${{ inputs.downstream }}
           fetch-depth: 0
@@ -179,10 +179,10 @@ jobs:
           echo "$version_from_tag" > VERSION
           git add VERSION
           git diff --cached --exit-code || git commit -s -m "[bot] add VERSION file with ${version_from_tag}"
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v5
         with:
           go-version: ${{ inputs.go-version }}
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
       - name: go mod tidy + vendor
@@ -211,7 +211,7 @@ jobs:
           scope: ${{ steps.org.outputs.sandbox }}
       - name: Create Pull Request
         if: github.event_name != 'pull_request'
-        uses: rhobs/create-pull-request@v3
+        uses: peter-evans/create-pull-request@v6
         id: create-pr
         with:
           title: "[bot] Bump ${{ inputs.downstream }} to ${{ steps.upstream.outputs.release }}"
@@ -244,7 +244,6 @@ jobs:
           delete-branch: true
           token: ${{ steps.pr.outputs.token }}
           push-to-fork: ${{ inputs.sandbox }}
-          push-to-fork-token: ${{ steps.cloner.outputs.token }}
       - name: Compose slack message body
         if: github.event_name != 'pull_request' && (success() || steps.fork-sync.outputs.status == 'uptodate' || steps.fork-sync.outputs.status == 'ahead')
         continue-on-error: true
