@@ -179,7 +179,7 @@ jobs:
           echo "$version_from_tag" > VERSION
           git add VERSION
           git diff --cached --exit-code || git commit -s -m "[bot] add VERSION file with ${version_from_tag}"
-      - uses: actions/setup-go@5
+      - uses: actions/setup-go@v5
         with:
           go-version: ${{ inputs.go-version }}
       - uses: actions/setup-node@v4
