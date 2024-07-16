@@ -211,7 +211,7 @@ jobs:
           scope: ${{ steps.org.outputs.sandbox }}
       - name: Create Pull Request
         if: github.event_name != 'pull_request'
-        uses: peter-evans/create-pull-request@v6
+        uses: rhobs/create-pull-request@v3
         id: create-pr
         with:
           title: "[bot] Bump ${{ inputs.downstream }} to ${{ steps.upstream.outputs.release }}"
@@ -244,6 +244,7 @@ jobs:
           delete-branch: true
           token: ${{ steps.pr.outputs.token }}
           push-to-fork: ${{ inputs.sandbox }}
+          push-to-fork-token: ${{ steps.cloner.outputs.token }}
       - name: Compose slack message body
         if: github.event_name != 'pull_request' && (success() || steps.fork-sync.outputs.status == 'uptodate' || steps.fork-sync.outputs.status == 'ahead')
         continue-on-error: true
