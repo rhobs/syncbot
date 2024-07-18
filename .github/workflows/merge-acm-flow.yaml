@@ -211,7 +211,7 @@ jobs:
           scope: ${{ steps.org.outputs.sandbox }}
       - name: Create Pull Request
         if: github.event_name != 'pull_request'
-        uses: rhobs/create-pull-request@v3
+        uses: peter-evans/create-pull-request@v6
         id: create-pr
         with:
           title: "[bot] Bump ${{ inputs.downstream }} to ${{ steps.upstream.outputs.release }}"
@@ -221,30 +221,30 @@ jobs:
             The logs for this run can be found [in the syncbot repo actions](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
             If you wish to perform this manually, execute the following commands from ${{ inputs.downstream }} repo:
             ```
-             git fetch https://github.com/${{ inputs.upstream }} --tags
-             if ! git merge refs/tags/${{ steps.upstream.outputs.release }} --no-edit; then
-               git checkout --theirs ${{ inputs.restore-upstream }}
-               git checkout --ours ${{ inputs.restore-downstream }}
-               git add ${{ inputs.restore-upstream }} ${{ inputs.restore-downstream }}
-               git merge --continue
-             fi
-             go mod tidy
-             go mod vendor
-             ${{ inputs.assets-cmd }}
-             if [ -f scripts/rh-manifest.sh ]; then
-               bash scripts/rh-manifest.sh
-               git add rh-manifest.txt
-               git diff --cached --exit-code || git commit -s -m "[bot] update rh-manifest.txt"
-             fi
-             ```
+            git fetch https://github.com/${{ inputs.upstream }} --tags
+            if ! git merge refs/tags/${{ steps.upstream.outputs.release }} --no-edit; then
+              git checkout --theirs ${{ inputs.restore-upstream }}
+              git checkout --ours ${{ inputs.restore-downstream }}
+              git add ${{ inputs.restore-upstream }} ${{ inputs.restore-downstream }}
+              git merge --continue
+            fi
+            go mod tidy
+            go mod vendor
+            ${{ inputs.assets-cmd }}
+            if [ -f scripts/rh-manifest.sh ]; then
+              bash scripts/rh-manifest.sh
+              git add rh-manifest.txt
+              git diff --cached --exit-code || git commit -s -m "[bot] update rh-manifest.txt"
+            fi
+            ```
           author: 'github-actions[bot]<github-actions[bot]@users.noreply.github.com>'
           committer: 'github-actions[bot]<github-actions[bot]@users.noreply.github.com>'
           signoff: true
-          branch: acm-prometheus:automated-updates-acm-${{ inputs.downstream-branch }}
+          branch: automated-updates-acm-${{ inputs.downstream-branch }}
           delete-branch: true
-          token: ${{ steps.pr.outputs.token }}
+          token: ${{ steps.cloner.outputs.token }}
           push-to-fork: ${{ inputs.sandbox }}
-          push-to-fork-token: ${{ steps.cloner.outputs.token }}
+#          push-to-fork-token: ${{ steps.cloner.outputs.token }}
       # - name: Create Pull Request using GitHub CLI
       #   id: create-pr
       #   if: github.event_name != 'pull_request'
