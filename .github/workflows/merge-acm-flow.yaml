@@ -209,64 +209,64 @@ jobs:
           app_id: ${{ secrets.cloner-app-id }}
           private_key: ${{ secrets.cloner-app-private-key }}
           scope: ${{ steps.org.outputs.sandbox }}
-#      - name: Create Pull Request
-#        if: github.event_name != 'pull_request'
-#        uses: rhobs/create-pull-request@v3
-#        id: create-pr
-#        with:
-#          title: "[bot] Bump ${{ inputs.downstream }} to ${{ steps.upstream.outputs.release }}"
-#          body: |
-#            ## Description
-#            This is an automated version bump from CI.
-#            The logs for this run can be found [in the syncbot repo actions](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
-#            If you wish to perform this manually, execute the following commands from ${{ inputs.downstream }} repo:
-#            ```
-#            git fetch https://github.com/${{ inputs.upstream }} --tags
-#            if ! git merge refs/tags/${{ steps.upstream.outputs.release }} --no-edit; then
-#              git checkout --theirs ${{ inputs.restore-upstream }}
-#              git checkout --ours ${{ inputs.restore-downstream }}
-#              git add ${{ inputs.restore-upstream }} ${{ inputs.restore-downstream }}
-#              git merge --continue
-#            fi
-#            go mod tidy
-#            go mod vendor
-#            ${{ inputs.assets-cmd }}
-#            if [ -f scripts/rh-manifest.sh ]; then
-#              bash scripts/rh-manifest.sh
-#              git add rh-manifest.txt
-#              git diff --cached --exit-code || git commit -s -m "[bot] update rh-manifest.txt"
-#            fi
-#            ```
-#          author: 'github-actions[bot]<github-actions[bot]@users.noreply.github.com>'
-#          committer: 'github-actions[bot]<github-actions[bot]@users.noreply.github.com>'
-#          signoff: true
-#          branch: automated-updates-acm-${{ inputs.downstream-branch }}
-#          delete-branch: true
-#          token: ${{ steps.pr.outputs.token }}
-#          push-to-fork: ${{ inputs.sandbox }}
-#          push-to-fork-token: ${{ steps.cloner.outputs.token }}
-      - name: Create Pull Request using GitHub CLI
-        id: create-pr
-        if: github.event_name != 'pull_request'
-        run: |
-          gh pr create \
-            --title "[bot] Bump ${{ inputs.downstream }} to ${{ steps.upstream.outputs.release }}" \
-            --body "test PR creation with syncbot" \
-            --base ${{ inputs.downstream-branch }} \
-            --head automated-updates-acm-${{ inputs.downstream-branch }} \
-            --repo ${{ inputs.downstream }}
-        env:
-            GH_TOKEN: ${{ steps.pr.outputs.token }}
-      - name: Compose slack message body
-        if: github.event_name != 'pull_request' && (success() || steps.fork-sync.outputs.status == 'uptodate' || steps.fork-sync.outputs.status == 'ahead')
-        continue-on-error: true
-        id: slack-message
-        run: |
-          if [ "${{ steps.create-pr.outputs.pull-request-url }}" == "" ] || [ ${{ steps.fork-sync.outputs.status }} == "uptodate" ] || [ ${{ steps.fork-sync.outputs.status }} == "ahead" ] ; then
-            echo "message=${{ inputs.downstream }} is already ${{ steps.fork-sync.outputs.status }} with tag ${{ steps.org.outputs.downstream-version }}." >> $GITHUB_OUTPUT
-          else
-            echo "message=PR ${{ steps.create-pr.outputs.pull-request-url }} has been ${{ steps.create-pr.outputs.pull-request-operation || 'updated' }}." >> $GITHUB_OUTPUT
-          fi
+     - name: Create Pull Request
+       if: github.event_name != 'pull_request'
+       uses: rhobs/create-pull-request@v3
+       id: create-pr
+       with:
+         title: "[bot] Bump ${{ inputs.downstream }} to ${{ steps.upstream.outputs.release }}"
+         body: |
+           ## Description
+           This is an automated version bump from CI.
+           The logs for this run can be found [in the syncbot repo actions](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
+           If you wish to perform this manually, execute the following commands from ${{ inputs.downstream }} repo:
+           ```
+           git fetch https://github.com/${{ inputs.upstream }} --tags
+           if ! git merge refs/tags/${{ steps.upstream.outputs.release }} --no-edit; then
+             git checkout --theirs ${{ inputs.restore-upstream }}
+             git checkout --ours ${{ inputs.restore-downstream }}
+             git add ${{ inputs.restore-upstream }} ${{ inputs.restore-downstream }}
+             git merge --continue
+           fi
+           go mod tidy
+           go mod vendor
+           ${{ inputs.assets-cmd }}
+           if [ -f scripts/rh-manifest.sh ]; then
+             bash scripts/rh-manifest.sh
+             git add rh-manifest.txt
+             git diff --cached --exit-code || git commit -s -m "[bot] update rh-manifest.txt"
+           fi
+           ```
+         author: 'github-actions[bot]<github-actions[bot]@users.noreply.github.com>'
+         committer: 'github-actions[bot]<github-actions[bot]@users.noreply.github.com>'
+         signoff: true
+         branch: acm-prometheus:automated-updates-acm-${{ inputs.downstream-branch }}
+         delete-branch: true
+         token: ${{ steps.pr.outputs.token }}
+         push-to-fork: ${{ inputs.sandbox }}
+         push-to-fork-token: ${{ steps.cloner.outputs.token }}
+      # - name: Create Pull Request using GitHub CLI
+      #   id: create-pr
+      #   if: github.event_name != 'pull_request'
+      #   run: |
+      #     gh pr create \
+      #       --title "[bot] Bump ${{ inputs.downstream }} to ${{ steps.upstream.outputs.release }}" \
+      #       --body "test PR creation with syncbot" \
+      #       --base ${{ inputs.downstream-branch }} \
+      #       --head automated-updates-acm-${{ inputs.downstream-branch }} \
+      #       --repo ${{ inputs.downstream }}
+      #   env:
+      #       GH_TOKEN: ${{ steps.pr.outputs.token }}
+      # - name: Compose slack message body
+      #   if: github.event_name != 'pull_request' && (success() || steps.fork-sync.outputs.status == 'uptodate' || steps.fork-sync.outputs.status == 'ahead')
+      #   continue-on-error: true
+      #   id: slack-message
+      #   run: |
+      #     if [ "${{ steps.create-pr.outputs.pull-request-url }}" == "" ] || [ ${{ steps.fork-sync.outputs.status }} == "uptodate" ] || [ ${{ steps.fork-sync.outputs.status }} == "ahead" ] ; then
+      #       echo "message=${{ inputs.downstream }} is already ${{ steps.fork-sync.outputs.status }} with tag ${{ steps.org.outputs.downstream-version }}." >> $GITHUB_OUTPUT
+      #     else
+      #       echo "message=PR ${{ steps.create-pr.outputs.pull-request-url }} has been ${{ steps.create-pr.outputs.pull-request-operation || 'updated' }}." >> $GITHUB_OUTPUT
+      #     fi
       - uses: 8398a7/action-slack@v3
         if: github.event_name != 'pull_request' && (success() || steps.fork-sync.outputs.status == 'uptodate' || steps.fork-sync.outputs.status == 'ahead')
         continue-on-error: true
