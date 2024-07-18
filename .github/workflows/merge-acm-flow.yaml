@@ -196,7 +196,7 @@ jobs:
       - name: Get auth token to create pull request for ${{ inputs.downstream }}
         if: github.event_name != 'pull_request'
         id: pr
-        uses: getsentry/action-github-app-token@v1
+        uses: getsentry/action-github-app-token@v3
         with:
           app_id: ${{ secrets.pr-app-id }}
           private_key: ${{ secrets.pr-app-private-key }}
@@ -204,7 +204,7 @@ jobs:
       - name: Get auth token to push to ${{ inputs.sandbox }}
         if: github.event_name != 'pull_request'
         id: cloner
-        uses: getsentry/action-github-app-token@v1
+        uses: getsentry/action-github-app-token@v3
         with:
           app_id: ${{ secrets.cloner-app-id }}
           private_key: ${{ secrets.cloner-app-private-key }}
