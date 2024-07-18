@@ -254,7 +254,7 @@ jobs:
             --body "test PR creation with syncbot" \
             --base ${{ inputs.downstream-branch }} \
             --head automated-updates-acm-${{ inputs.downstream-branch }} \
-            --repo ${{ inputs.sandbox }}
+            --repo ${{ inputs.downstream }}
         env:
             GH_TOKEN: ${{ steps.pr.outputs.token }}
       - name: Compose slack message body
