@@ -211,7 +211,7 @@ jobs:
           scope: ${{ steps.org.outputs.sandbox }}
       - name: Create Pull Request
         if: github.event_name != 'pull_request'
-        uses: peter-evans/create-pull-request@v6
+        uses: rhobs/create-pull-request@v3
         id: create-pr
         with:
           title: "[bot] Bump ${{ inputs.downstream }} to ${{ steps.upstream.outputs.release }}"
