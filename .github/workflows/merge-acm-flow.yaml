@@ -255,7 +255,7 @@ jobs:
             --base ${{ inputs.downstream-branch }} \
             --head automated-updates-acm-${{ inputs.downstream-branch }} \
             --repo ${{ inputs.sandbox }}
-          env:
+        env:
             GH_TOKEN: ${{ steps.pr.outputs.token }}
       - name: Compose slack message body
         if: github.event_name != 'pull_request' && (success() || steps.fork-sync.outputs.status == 'uptodate' || steps.fork-sync.outputs.status == 'ahead')
