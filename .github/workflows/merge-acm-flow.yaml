@@ -251,27 +251,7 @@ jobs:
         run: |
           gh pr create \
             --title "[bot] Bump ${{ inputs.downstream }} to ${{ steps.upstream.outputs.release }}" \
-            --body "## Description
-            This is an automated version bump from CI.
-            The logs for this run can be found [in the syncbot repo actions](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
-            If you wish to perform this manually, execute the following commands from ${{ inputs.downstream }} repo:
-            ```
-            git fetch https://github.com/${{ inputs.upstream }} --tags
-            if ! git merge refs/tags/${{ steps.upstream.outputs.release }} --no-edit; then
-              git checkout --theirs ${{ inputs.restore-upstream }}
-              git checkout --ours ${{ inputs.restore-downstream }}
-              git add ${{ inputs.restore-upstream }} ${{ inputs.restore-downstream }}
-              git merge --continue
-            fi
-            go mod tidy
-            go mod vendor
-            ${{ inputs.assets-cmd }}
-            if [ -f scripts/rh-manifest.sh ]; then
-              bash scripts/rh-manifest.sh
-              git add rh-manifest.txt
-              git diff --cached --exit-code || git commit -s -m "[bot] update rh-manifest.txt"
-            fi
-            ```" \
+            --body "## Test PR creattion" \
             --author "github-actions[bot]<github-actions[bot]@users.noreply.github.com>" \
             --base ${{ inputs.downstream-branch }} \
             --head automated-updates-acm-${{ inputs.downstream-branch }} \
