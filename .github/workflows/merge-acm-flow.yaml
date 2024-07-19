@@ -246,7 +246,7 @@ jobs:
           push-to-fork: ${{ inputs.sandbox }}
           push-to-fork-token: ${{ steps.cloner.outputs.token }}
       - name: Compose slack message body
-        if: github.event_name != 'pull_request' && (success() || steps.fork-sync.outputs.status == 'uptodate' || steps.fork-sync.outputs.status == 'ahead')
+        if: github.event_name != 'pull_request' && (success() || steps.fork-sync.outputs.status == 'uptodate' || steps.fork-sync.outputs.status == 'ahead' || || contains(steps.create_pr.outputs.output, 'A pull request already exists'))
         continue-on-error: true
         id: slack-message
         run: |
@@ -256,7 +256,7 @@ jobs:
             echo "message=PR ${{ steps.create-pr.outputs.pull-request-url }} has been ${{ steps.create-pr.outputs.pull-request-operation || 'updated' }}." >> $GITHUB_OUTPUT
           fi
       - uses: 8398a7/action-slack@v3
-        if: github.event_name != 'pull_request' && (success() || steps.fork-sync.outputs.status == 'uptodate' || steps.fork-sync.outputs.status == 'ahead')
+        if: github.event_name != 'pull_request' && (success() || steps.fork-sync.outputs.status == 'uptodate' || steps.fork-sync.outputs.status == 'ahead' || contains(steps.create_pr.outputs.output, 'A pull request already exists'))
         continue-on-error: true
         with:
           status: custom
@@ -271,7 +271,7 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.slack-webhook-url }}
       - uses: 8398a7/action-slack@v3
-        if: github.event_name != 'pull_request' && (failure() && steps.fork-sync.outputs.status != 'uptodate' && steps.fork-sync.outputs.status != 'ahead')
+        if: github.event_name != 'pull_request' && (failure() && steps.fork-sync.outputs.status != 'uptodate' && steps.fork-sync.outputs.status != 'ahead' && !contains(steps.create_pr.outputs.output, 'A pull request already exists'))
         continue-on-error: true
         with:
           status: custom
