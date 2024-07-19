@@ -246,7 +246,7 @@ jobs:
           push-to-fork: ${{ inputs.sandbox }}
           push-to-fork-token: ${{ steps.cloner.outputs.token }}
       - name: Compose slack message body
-        if: github.event_name != 'pull_request' && (success() || steps.fork-sync.outputs.status == 'uptodate' || steps.fork-sync.outputs.status == 'ahead' || || contains(steps.create_pr.outputs.output, 'A pull request already exists'))
+        if: github.event_name != 'pull_request' && (success() || steps.fork-sync.outputs.status == 'uptodate' || steps.fork-sync.outputs.status == 'ahead' || contains(steps.create_pr.outputs.output, 'A pull request already exists'))
         continue-on-error: true
         id: slack-message
         run: |
