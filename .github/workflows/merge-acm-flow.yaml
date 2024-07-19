@@ -214,7 +214,7 @@ jobs:
         uses: rhobs/acm-create-pull-request@push-to-fork-token
         id: create-pr
         with:
-          title: "[bot] Bump ${{ inputs.downstream }} to ${{ steps.upstream.outputs.release }}"
+          title: "[ACM Obs bot] Bump ${{ inputs.downstream }} to ${{ steps.upstream.outputs.release }}"
           body: |
             ## Description
             This is an automated version bump from CI.
@@ -245,18 +245,37 @@ jobs:
           token: ${{ steps.pr.outputs.token }}
           push-to-fork: ${{ inputs.sandbox }}
           push-to-fork-token: ${{ steps.cloner.outputs.token }}
+      - name: Check if PR exists using gh cli
+        # This step is a hack for the time being as the create-pull-request action has an issue with listing PRs across different named forks of the same repo.
+        # This is only to get the PR URL if it exists.
+        if: github.event_name != 'pull_request' && failure()
+        id: pr-exists
+        env:
+          GH_TOKEN: ${{ steps.pr.outputs.token }}
+        run: |
+          if [ "${{ steps.create-pr.outcome }}" != "success" ]; then
+            echo "${{ steps.create-pr.outcome }}"
+            PR_URL=$(gh pr list --json url --jq '.[0].url' --repo ${{ inputs.downstream }} --state open  --head automated-updates-acm-${{ inputs.downstream-branch }})
+              if [ ! -z "$PR_URL" ]; then
+                echo "pr_exists=1" >> $GITHUB_OUTPUT
+                echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+                echo "PR exists >>  $PR_URL"
+              else
+                echo "pr_exists=0" >> $GITHUB_OUTPUT
+              fi
+          fi
       - name: Compose slack message body
-        if: github.event_name != 'pull_request' && (success() || steps.fork-sync.outputs.status == 'uptodate' || steps.fork-sync.outputs.status == 'ahead' || contains(steps.create_pr.outputs.output, 'A pull request already exists'))
+        if: github.event_name != 'pull_request' && (success() || steps.fork-sync.outputs.status == 'uptodate' || steps.fork-sync.outputs.status == 'ahead' || steps.pr-exists.outputs.pr_exists == '1' )
         continue-on-error: true
         id: slack-message
         run: |
-          if [ "${{ steps.create-pr.outputs.pull-request-url }}" == "" ] || [ ${{ steps.fork-sync.outputs.status }} == "uptodate" ] || [ ${{ steps.fork-sync.outputs.status }} == "ahead" ] ; then
+          if [ ${{ steps.pr-exists.outputs.pr_exists }} != '1' ] || [ ${{ steps.fork-sync.outputs.status }} == "uptodate" ] || [ ${{ steps.fork-sync.outputs.status }} == "ahead" ] ; then
             echo "message=${{ inputs.downstream }} is already ${{ steps.fork-sync.outputs.status }} with tag ${{ steps.org.outputs.downstream-version }}." >> $GITHUB_OUTPUT
           else
-            echo "message=PR ${{ steps.create-pr.outputs.pull-request-url }} has been ${{ steps.create-pr.outputs.pull-request-operation || 'updated' }}." >> $GITHUB_OUTPUT
+            echo "message=PR ${{ steps.pr-exists.outputs.pr_url }} has been updated." >> $GITHUB_OUTPUT
           fi
       - uses: 8398a7/action-slack@v3
-        if: github.event_name != 'pull_request' && (success() || steps.fork-sync.outputs.status == 'uptodate' || steps.fork-sync.outputs.status == 'ahead' || contains(steps.create_pr.outputs.output, 'A pull request already exists'))
+        if: github.event_name != 'pull_request' && (success() || steps.fork-sync.outputs.status == 'uptodate' || steps.fork-sync.outputs.status == 'ahead' || steps.pr-exists.outputs.pr_exists == '1')
         continue-on-error: true
         with:
           status: custom
@@ -271,7 +290,7 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.slack-webhook-url }}
       - uses: 8398a7/action-slack@v3
-        if: github.event_name != 'pull_request' && (failure() && steps.fork-sync.outputs.status != 'uptodate' && steps.fork-sync.outputs.status != 'ahead' && !contains(steps.create_pr.outputs.output, 'A pull request already exists'))
+        if: github.event_name != 'pull_request' && (failure() && steps.fork-sync.outputs.status != 'uptodate' && steps.fork-sync.outputs.status != 'ahead' && !(steps.pr-exists.outputs.pr_exists == '1'))
         continue-on-error: true
         with:
           status: custom
