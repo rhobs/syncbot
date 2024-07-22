@@ -21,7 +21,9 @@ jobs:
       downstream: stolostron/kube-state-metrics
       sandbox: rhobs/acm-kube-state-metrics
       go-version: "1.21"
-      restore-upstream: CHANGELOG.md VERSION
+      restore-upstream: >-
+        CHANGELOG.md 
+        VERSION
       restore-downstream: >-
         OWNERS
         docs
