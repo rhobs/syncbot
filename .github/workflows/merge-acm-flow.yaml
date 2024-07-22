@@ -108,7 +108,7 @@ jobs:
           version: ${{ steps.org.outputs.downstream-version }}
           compare-to: ${{ steps.upstream.outputs.release }}
           lenient: false # fail if either of the versions cannot be parsed
-      - name: Check openshift fork status
+      - name: Check ACM stolostron fork status
         id: fork-sync
         run: |
           SEMVER_RESULT="${{ steps.version.outputs.comparison-result }}"
