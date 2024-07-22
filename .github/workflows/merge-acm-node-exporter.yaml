@@ -16,7 +16,7 @@ jobs:
   node-exporter-merge:
     uses: ./.github/workflows/merge-acm-flow.yaml
     with:
-      upstream: prometheus/node-exporter
+      upstream: prometheus/node_exporter
       downstream: stolostron/node-exporter
       sandbox: rhobs/acm-node-exporter
       go-version: "1.21"
