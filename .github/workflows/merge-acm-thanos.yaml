@@ -3,7 +3,7 @@ name: ACM Thanos merger
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 0 * * *' #@daily
+    - cron: '0 0 * * 1' #@weekly
   pull_request:
     paths:
     - '.github/workflows/merge-acm-flow.yaml'
