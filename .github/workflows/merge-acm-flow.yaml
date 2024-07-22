@@ -272,7 +272,7 @@ jobs:
           if [ ${{ steps.pr-exists.outputs.pr_exists }} != '1' ] || [ ${{ steps.fork-sync.outputs.status }} == "uptodate" ] || [ ${{ steps.fork-sync.outputs.status }} == "ahead" ] ; then
             echo "message=${{ inputs.downstream }} is already ${{ steps.fork-sync.outputs.status }} with tag ${{ steps.org.outputs.downstream-version }}." >> $GITHUB_OUTPUT
           else
-            echo "message=PR ${{ steps.pr-exists.outputs.pr_url }} has been updated." >> $GITHUB_OUTPUT
+            echo "message=PR ${{ steps.create-pr.outputs.pull-request-url }} || ${{ steps.pr-exists.output.pr_url }} has been ${{ steps.create-pr.outputs.pull-request-operation || 'updated' }}." >> $GITHUB_OUTPUT
           fi
       - uses: 8398a7/action-slack@v3
         if: github.event_name != 'pull_request' && (success() || steps.fork-sync.outputs.status == 'uptodate' || steps.fork-sync.outputs.status == 'ahead' || steps.pr-exists.outputs.pr_exists == '1')
