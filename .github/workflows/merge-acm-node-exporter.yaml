@@ -1,4 +1,4 @@
-name: Node exporter merger
+name: ACM Node exporter merger
 
 on:
   workflow_dispatch:

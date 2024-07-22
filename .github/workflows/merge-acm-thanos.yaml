@@ -1,4 +1,4 @@
-name: Thanos merger
+name: ACM Thanos merger
 
 on:
   workflow_dispatch:
@@ -17,8 +17,8 @@ jobs:
     uses: ./.github/workflows/merge-acm-flow.yaml
     with:
       upstream: thanos-io/thanos
-      downstream: openshift/thanos
-      sandbox: rhobs/thanos
+      downstream: stolostron/thanos
+      sandbox: rhobs/acm-thanos
       go-version: "1.22"
       restore-downstream: >-
         OWNERS

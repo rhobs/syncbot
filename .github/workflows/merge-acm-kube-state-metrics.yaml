@@ -1,4 +1,4 @@
-name: kube-state-metrics merger
+name: ACM kube-state-metrics merger
 
 on:
   workflow_dispatch:
