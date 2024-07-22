@@ -1,0 +1,31 @@
+name: kube-state-metrics merger
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 1' #@weekly
+  pull_request:
+    paths:
+    - '.github/workflows/merge-acm-flow.yaml'
+    - '.github/workflows/merge-acm-kube-state-metrics.yaml'
+  push:
+    paths:
+    - '.github/workflows/merge-acm-flow.yaml'
+    - '.github/workflows/merge-acm-kube-state-metrics.yaml'
+
+jobs:
+  kube-state-metrics-merge:
+    uses: ./.github/workflows/merge-acm-flow.yaml
+    with:
+      upstream: kubernetes/kube-state-metrics
+      downstream: stolostron/kube-state-metrics
+      sandbox: rhobs/acm-kube-state-metrics
+      go-version: "1.21"
+      restore-upstream: CHANGELOG.md VERSION
+      restore-downstream: OWNERS
+    secrets:
+      pr-app-id: ${{ secrets.ACM_APP_ID }}
+      pr-app-private-key: ${{ secrets.ACM_APP_PRIVATE_KEY }}
+      cloner-app-id: ${{ secrets.ACM_CLONER_APP_ID }}
+      cloner-app-private-key: ${{ secrets.ACM_CLONER_APP_PRIVATE_KEY }}
+      slack-webhook-url: ${{ secrets.ACM_SLACK_WEBHOOK_URL }}
