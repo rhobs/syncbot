@@ -1,4 +1,4 @@
-name: ACM Prometheus merger
+name: ACM Alertmanager merger
 
 on:
   workflow_dispatch:
@@ -6,34 +6,34 @@ on:
     - cron: '0 0 * * 1' #@weekly
   pull_request:
     paths:
-    - '.github/workflows/merge-acm-flow.yaml'
-    - '.github/workflows/merge-acm-prometheus.yaml'
+      - '.github/workflows/merge-acm-flow.yaml'
+      - '.github/workflows/merge-acm-alertmanager.yaml'
   push:
     paths:
-    - '.github/workflows/merge-acm-flow.yaml'
-    - '.github/workflows/merge-acm-prometheus.yaml'
+      - '.github/workflows/merge-acm-flow.yaml'
+      - '.github/workflows/merge-acm-alertmanager.yaml'
+
 jobs:
-  acm-prometheus-merge:
+  alertmanager-merge:
     uses: ./.github/workflows/merge-acm-flow.yaml
     with:
-      upstream: prometheus/prometheus
-      downstream: stolostron/prometheus
-      sandbox: rhobs/acm-prometheus
-      go-version: "1.21"
+      upstream: prometheus/alertmanager
+      downstream: stolostron/prometheus-alertmanager
+      sandbox: rhobs/acm-prometheus-alertmanager
+      go-version: "1.22"
       restore-upstream: >-
         CHANGELOG.md
         VERSION
         go.mod
         go.sum
-        .golangci.yml
       assets-cmd: |
         # Only compress assets if assets actually changed
         # The git diff relies on gits remote naming. The merge-flow checks out
         # $downstream as origin at the time of writing this code.
-        if ! git diff --exit-code origin/main web/ui; then
+        if ! git diff --exit-code origin/master ui/react-app; then
           make assets-compress
-          find web/ui/static -type f -name '*.gz' -exec git add -f {} \;
-          git add -f web/ui/embed.go
+          find ui/react-app -type f -name '*.gz' -exec git add {} \;
+          git add ui/react-app/embed.go
           git diff --cached --exit-code || git commit -s -m "[bot] assets: generate"
         fi
 

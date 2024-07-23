@@ -1,4 +1,4 @@
-name: ACM Prometheus Operator merger
+name: ACM Node exporter merger
 
 on:
   workflow_dispatch:
@@ -7,29 +7,27 @@ on:
   pull_request:
     paths:
     - '.github/workflows/merge-acm-flow.yaml'
-    - '.github/workflows/merge-acm-prometheus-operator.yaml'
+    - '.github/workflows/merge-acm-node-exporter.yaml'
   push:
     paths:
     - '.github/workflows/merge-acm-flow.yaml'
-    - '.github/workflows/merge-acm-prometheus-operator.yaml'
+    - '.github/workflows/merge-acm-node-exporter.yaml'
 jobs:
-  acm-prometheus-operator-merge:
+  node-exporter-merge:
     uses: ./.github/workflows/merge-acm-flow.yaml
     with:
-      upstream: prometheus-operator/prometheus-operator
-      downstream: stolostron/prometheus-operator
-      sandbox: rhobs/acm-prometheus-operator
+      upstream: prometheus/node_exporter
+      downstream: stolostron/node-exporter
+      sandbox: rhobs/acm-node-exporter
       go-version: "1.21"
+      restore-downstream: >-
+         OWNERS
       restore-upstream: >-
-        CHANGELOG.md
-        Documentation
-        VERSION
-        bundle.yaml
-        example
-        go.mod
-        go.sum
-        pkg
-        cmd
+         CHANGELOG.md
+         VERSION
+         collector
+         go.mod
+         go.sum
     secrets:
       pr-app-id: ${{ secrets.ACM_APP_ID }}
       pr-app-private-key: ${{ secrets.ACM_APP_PRIVATE_KEY }}

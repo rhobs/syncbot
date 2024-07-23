@@ -1,0 +1,40 @@
+name: ACM Thanos merger
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 1' #@weekly
+  pull_request:
+    paths:
+    - '.github/workflows/merge-acm-flow.yaml'
+    - '.github/workflows/merge-acm-thanos.yaml'
+  push:
+    paths:
+    - '.github/workflows/merge-acm-flow.yaml'
+    - '.github/workflows/merge-acm-thanos.yaml'
+jobs:
+  thanos-merge:
+    uses: ./.github/workflows/merge-acm-flow.yaml
+    with:
+      upstream: thanos-io/thanos
+      downstream: stolostron/thanos
+      sandbox: rhobs/acm-thanos
+      go-version: "1.22"
+      restore-downstream: >-
+        OWNERS
+      restore-upstream: >-
+        CHANGELOG.md
+        VERSION
+        docs
+        go.mod
+        go.sum
+        pkg
+        tutorials
+        .busybox-versions
+        .devcontainer
+    secrets:
+      pr-app-id: ${{ secrets.APP_ID }}
+      pr-app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
+      cloner-app-id: ${{ secrets.CLONER_APP_ID }}
+      cloner-app-private-key: ${{ secrets.CLONER_APP_PRIVATE_KEY }}
+      slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}

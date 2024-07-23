@@ -1,4 +1,4 @@
-name: ACM Prometheus Operator merger
+name: ACM kube-state-metrics merger
 
 on:
   workflow_dispatch:
@@ -7,29 +7,26 @@ on:
   pull_request:
     paths:
     - '.github/workflows/merge-acm-flow.yaml'
-    - '.github/workflows/merge-acm-prometheus-operator.yaml'
+    - '.github/workflows/merge-acm-kube-state-metrics.yaml'
   push:
     paths:
     - '.github/workflows/merge-acm-flow.yaml'
-    - '.github/workflows/merge-acm-prometheus-operator.yaml'
+    - '.github/workflows/merge-acm-kube-state-metrics.yaml'
+
 jobs:
-  acm-prometheus-operator-merge:
+  kube-state-metrics-merge:
     uses: ./.github/workflows/merge-acm-flow.yaml
     with:
-      upstream: prometheus-operator/prometheus-operator
-      downstream: stolostron/prometheus-operator
-      sandbox: rhobs/acm-prometheus-operator
+      upstream: kubernetes/kube-state-metrics
+      downstream: stolostron/kube-state-metrics
+      sandbox: rhobs/acm-kube-state-metrics
       go-version: "1.21"
       restore-upstream: >-
-        CHANGELOG.md
-        Documentation
+        CHANGELOG.md 
         VERSION
-        bundle.yaml
-        example
-        go.mod
-        go.sum
-        pkg
-        cmd
+      restore-downstream: >-
+        OWNERS
+        docs
     secrets:
       pr-app-id: ${{ secrets.ACM_APP_ID }}
       pr-app-private-key: ${{ secrets.ACM_APP_PRIVATE_KEY }}
