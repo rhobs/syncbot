@@ -33,8 +33,8 @@ jobs:
         .busybox-versions
         .devcontainer
     secrets:
-      pr-app-id: ${{ secrets.APP_ID }}
-      pr-app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
-      cloner-app-id: ${{ secrets.CLONER_APP_ID }}
-      cloner-app-private-key: ${{ secrets.CLONER_APP_PRIVATE_KEY }}
-      slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+      pr-app-id: ${{ secrets.ACM_APP_ID }}
+      pr-app-private-key: ${{ secrets.ACM_APP_PRIVATE_KEY }}
+      cloner-app-id: ${{ secrets.ACM_CLONER_APP_ID }}
+      cloner-app-private-key: ${{ secrets.ACM_CLONER_APP_PRIVATE_KEY }}
+      slack-webhook-url: ${{ secrets.ACM_SLACK_WEBHOOK_URL }}
