@@ -44,7 +44,7 @@ on:
         default: ''
         type: string
       downstream-version-expression:
-        description: Expression to extract downstream version from downstream repo.
+        description: Expression to extract downstream version from downstream repo.  Follows the https://www.npmjs.com/package/semver spec.
         required: false
         default: ''
         type: string
@@ -88,14 +88,14 @@ jobs:
           DOWNSTREAM_VERSION=$(curl -sL "https://raw.githubusercontent.com/${{ inputs.downstream }}/${{ inputs.downstream-branch }}/VERSION")
           if [[ "${DOWNSTREAM_VERSION}" =~ ^$|"404: Not Found" ]]; then
             # Strip the trailing URL from the expression.
-            DOWNSTREAM_VERSION_SED=$(echo "${{ inputs.downstream-version-expression }}" | sed -e 's/\(http[^ ]*\).*$/\1/' -e 's/http[^ ]*$//')
+            DOWNSTREAM_VERSION_EXPRESSION=$(echo "${{ inputs.downstream-version-expression }}" | sed -e 's/\(http[^ ]*\).*$/\1/' -e 's/http[^ ]*$//')
             # Strip the leading sed command from the expression.
             DOWNSTREAM_VERSION_URL=$(echo "${{ inputs.downstream-version-expression }}" | sed -n 's/^.*\(http[^ ]*\).*$/\1/p')
-            if [ "${DOWNSTREAM_VERSION_SED}" == "" ] || [ "${DOWNSTREAM_VERSION_URL}" == "" ]; then
+            if [ "${DOWNSTREAM_VERSION_EXPRESSION}" == "" ] || [ "${DOWNSTREAM_VERSION_URL}" == "" ]; then
               echo "::error::downstream-version-expression is invalid"
               exit 1
             fi
-            DOWNSTREAM_VERSION=$(curl --silent "${DOWNSTREAM_VERSION_URL}" | eval "${DOWNSTREAM_VERSION_SED}")
+             DOWNSTREAM_VERSION=$(curl --silent "${DOWNSTREAM_VERSION_URL}" | eval "${DOWNSTREAM_VERSION_EXPRESSION}")
             if ! [[ "${DOWNSTREAM_VERSION}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
               echo "::error::downstream-version-expression is invalid"
               exit 1
@@ -231,11 +231,6 @@ jobs:
             go mod tidy
             go mod vendor
             ${{ inputs.assets-cmd }}
-            if [ -f scripts/rh-manifest.sh ]; then
-              bash scripts/rh-manifest.sh
-              git add rh-manifest.txt
-              git diff --cached --exit-code || git commit -s -m "[bot] update rh-manifest.txt"
-            fi
             ```
           author: 'github-actions[bot]<github-actions[bot]@users.noreply.github.com>'
           committer: 'github-actions[bot]<github-actions[bot]@users.noreply.github.com>'
