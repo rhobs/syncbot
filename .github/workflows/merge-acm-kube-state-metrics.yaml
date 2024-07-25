@@ -26,7 +26,6 @@ jobs:
         docs
         go.mod
         Dockerfile
-        VERSION
       restore-downstream: >-
         OWNERS
       downstream-version-expression: |
