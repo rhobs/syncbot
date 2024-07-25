@@ -23,9 +23,9 @@ jobs:
       go-version: "1.22"
       restore-upstream: >-
         CHANGELOG.md 
-        VERSION
         docs
         go.mod
+        Dockerfile
       restore-downstream: >-
         OWNERS
       downstream-version-expression: |
