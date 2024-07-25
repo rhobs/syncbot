@@ -14,7 +14,7 @@ on:
     - '.github/workflows/merge-acm-kube-state-metrics.yaml'
 
 jobs:
-  kube-state-metrics-merge:
+  acm-kube-state-metrics-merge:
     uses: ./.github/workflows/merge-acm-flow.yaml
     with:
       upstream: kubernetes/kube-state-metrics

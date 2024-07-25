@@ -14,7 +14,7 @@ on:
       - '.github/workflows/merge-acm-alertmanager.yaml'
 
 jobs:
-  alertmanager-merge:
+  acm-alertmanager-merge:
     uses: ./.github/workflows/merge-acm-flow.yaml
     with:
       upstream: prometheus/alertmanager

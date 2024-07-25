@@ -13,7 +13,7 @@ on:
     - '.github/workflows/merge-acm-flow.yaml'
     - '.github/workflows/merge-acm-thanos.yaml'
 jobs:
-  thanos-merge:
+  acm-thanos-merge:
     uses: ./.github/workflows/merge-acm-flow.yaml
     with:
       upstream: thanos-io/thanos
