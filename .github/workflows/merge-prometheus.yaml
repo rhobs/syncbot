@@ -2,6 +2,44 @@ name: Prometheus merger
 
 on:
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      upstream-version-regex:
+        description: XXX
+        required: false
+        default: '^v\d+\.\d+\.\d+$'
+        type: string
+      sandbox-branch-prefix:
+        description: XXX
+        required: false
+        default: 'automated-updates'
+        type: string
+      pr-labels:
+        description: XXX
+        required: false
+        default: ''
+        type: string
+      pr-title-prefix:
+        description: XXX
+        required: false
+        default: ''
+        type: string
+    secrets:
+      cloner-app-id:
+        description: Github ID of cloner app
+        required: true
+      cloner-app-private-key:
+        description: Github private key of cloner app
+        required: true
+      pr-app-id:
+        description: Github ID of PR creation app
+        required: true
+      pr-app-private-key:
+        description: Github private key of PR creation app
+        required: true
+      slack-webhook-url:
+        description: Slack webhook URL to send notification
+        required: true
   schedule:
     - cron: '0 0 * * *' #@daily
   pull_request:
@@ -17,8 +55,12 @@ jobs:
     uses: ./.github/workflows/merge-flow.yaml
     with:
       upstream: prometheus/prometheus
+      upstream-version-regex: ${{ inputs.upstream-version-regex }}
       downstream: openshift/prometheus
       sandbox: rhobs/prometheus
+      sandbox-branch-prefix: ${{ inputs.sandbox-branch-prefix }}
+      pr-labels: ${{ inputs.pr-labels }}
+      pr-title-prefix: ${{ inputs.pr-title-prefix }}
       go-version: "1.21"
       restore-upstream: >-
         CHANGELOG.md
