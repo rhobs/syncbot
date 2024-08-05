@@ -27,6 +27,7 @@ jobs:
         go.mod
         Dockerfile
       restore-downstream: >-
+        VERSION
         OWNERS
       downstream-version-expression: |
         sed -n -E 's/^version: "*([0-9]+\.[0-9]+\.[0-9]+)"$/v\1/p' https://raw.githubusercontent.com/openshift/kube-state-metrics/main/data.yaml
