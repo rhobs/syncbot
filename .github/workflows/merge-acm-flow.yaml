@@ -146,10 +146,6 @@ jobs:
           echo "reset ${{ inputs.restore-upstream }}"
           git checkout --theirs ${{ inputs.restore-upstream }} || true
           git add ${{ inputs.restore-upstream }} || true
-      - name: Remove deleted files
-        if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' }}
-        run: |
-          git diff --name-only --diff-filter=D | xargs -r git rm
       - name: Resolve conflict using downstream contents
         if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' && inputs.restore-downstream != ''}}
         run: |
