@@ -1,0 +1,74 @@
+name: Check Konflux PRs in Downstream Repos
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 1' #@weekly
+
+jobs:
+  check-konflux-prs:
+    runs-on: ubuntu-latest
+    # get secrets as input
+    secrets:
+      pr-app-id: ${{ secrets.ACM_APP_ID }}
+      pr-app-private-key: ${{ secrets.ACM_APP_PRIVATE_KEY }}
+      slack-webhook-url: ${{ secrets.ACM_SLACK_WEBHOOK_URL }}
+    strategy:
+      matrix:
+        repo:
+          - stolostron/thanos
+          - stolostron/node-exporter
+          - stolostron/kube-state-metrics
+          - stolostron/prometheus
+          - stolostron/prometheus-alertmanager
+          - stolostron/prometheus-operator
+          - stolostron/grafana
+          - stolosstron/kube-rbac-proxy
+          - stolostron/multicluster-observability-operator
+          - stolostron/observatorium
+          - stolostron/observatorium-operator
+          - stolotstron/thanos-receive-controller
+          - stolostron/kube-thanos
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Get auth token to create pull request for ${{ matrix.repo }}
+        if: github.event_name != 'pull_request'
+        id: pr
+        uses: getsentry/action-github-app-token@v3
+        with:
+          app_id: ${{ secrets.pr-app-id }}
+          private_key: ${{ secrets.pr-app-private-key }}
+          scope: ${{ matrix.repo }}
+      - name: List PRs and check for Konflux
+        env:
+          GH_TOKEN: ${{ steps.pr.outputs.token }}
+        id: check-prs
+        run: |
+          PR_URL=$(gh pr list --repo ${{ matrix.repo }} --state open --search "Konflux in:title" --json url --jq '.[].url')
+          if [ -n "$PR_URL" ]; then
+            echo "konflux_pr_exists=1" >> $GITHUB_ENV
+            echo "PR_URL=$PR_URL" >> $GITHUB_ENV
+          else
+            echo "konflux_pr_exists=0" >> $GITHUB_ENV
+            echo "PR_URL=" >> $GITHUB_ENV
+          fi
+      - name: Compose Slack message
+        id: slack-message
+        run: |
+          if [ "${{ env.konflux_pr_exists }}" == "1" ]; then
+            echo "message=Unmerged Konflux PRs are present in https://github.com/${{ matrix.repo }}" >> $GITHUB_ENV
+      - name: Send Slack notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          fields: workflow
+          custom_payload: |
+            {
+              attachments: [{
+                color: ${{ env.konflux_pr_exists == '1' && 'danger' || 'good' }},
+                text: "**${{ env.message }}**",
+              }]
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACM_SLACK_WEBHOOK_URL }}
