@@ -262,6 +262,8 @@ jobs:
               fi
           fi
       - name: Check if Konflux PRs exist
+        env:
+          GH_TOKEN: ${{ steps.pr.outputs.token }}
         id: konflux-pr-exists
         if: github.event_name != 'pull_request' && failure()
         run: |
