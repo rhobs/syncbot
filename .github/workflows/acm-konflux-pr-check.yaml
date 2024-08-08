@@ -75,5 +75,6 @@ jobs:
                 color: ${{ steps.check-prs.outputs.konflux_pr_exists == '1' && 'danger' || 'good' }},
                 text: "**${{ steps.slack-message.outputs.message }}**",
               }]
+            }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACM_SLACK_WEBHOOK_URL }}
