@@ -4,6 +4,12 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 0 * * 1' #@weekly
+  pull_request:
+    paths:
+      - '.github/workflows/acm-konflux-pr-check.yaml'
+  push:
+    paths:
+      - '.github/workflows/acm-konflux-pr-check.yaml'
 
 jobs:
   check-konflux-prs:
