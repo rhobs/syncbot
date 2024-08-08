@@ -53,29 +53,27 @@ jobs:
         run: |
           PR_URL=$(gh pr list --repo ${{ matrix.repo }} --state open  | grep -i "Konflux")
           if [ ! -z "$PR_URL" ]; then
-            echo "konflux_pr_exists=1" >> $GITHUB_ENV
-            echo "PR_URL=$PR_URL" >> $GITHUB_ENV
+            echo "konflux_pr_exists=1" >> $GITHUB_OUTPUT
           else
-            echo "konflux_pr_exists=0" >> $GITHUB_ENV
-            echo "PR_URL=" >> $GITHUB_ENV
+            echo "konflux_pr_exists=0" >> $GITHUB_OUTPUT
           fi
       - name: Compose Slack message
         id: slack-message
         run: |
-          if [ "${{ env.konflux_pr_exists }}" == "1" ]; then
-            echo "message=Unmerged Konflux PRs are present in https://github.com/${{ matrix.repo }}" >> $GITHUB_ENV
+          if [ "${{ steps.check-prs.outputs.konflux_pr_exists }}" == "1" ]; then
+            echo "message=Unmerged Konflux PRs are present in https://github.com/${{ matrix.repo }}" >> $GITHUB_OUTPUT
           fi
       - name: Send Slack notification
         uses: 8398a7/action-slack@v3
-        if : ${{ env.konflux_pr_exists == '1' }}
+        if : ${{ steps.check-prs.outputs.konflux_pr_exists == '1' }}
         with:
           status: custom
           fields: workflow
           custom_payload: |
             {
               attachments: [{
-                color: ${{ env.konflux_pr_exists == '1' && 'danger' || 'good' }},
-                text: "**${{ env.message }}**",
+                color: ${{ steps.check-prs.outputs.konflux_pr_exists == '1' && 'danger' || 'good' }},
+                text: "**${{ steps.slack-message.outputs.message }}**",
               }]
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACM_SLACK_WEBHOOK_URL }}
