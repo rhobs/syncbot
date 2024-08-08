@@ -14,11 +14,6 @@ on:
 jobs:
   check-konflux-prs:
     runs-on: ubuntu-latest
-    # get secrets as input
-    secrets:
-      pr-app-id: ${{ secrets.ACM_APP_ID }}
-      pr-app-private-key: ${{ secrets.ACM_APP_PRIVATE_KEY }}
-      slack-webhook-url: ${{ secrets.ACM_SLACK_WEBHOOK_URL }}
     strategy:
       matrix:
         repo:
@@ -29,24 +24,26 @@ jobs:
           - stolostron/prometheus-alertmanager
           - stolostron/prometheus-operator
           - stolostron/grafana
-          - stolosstron/kube-rbac-proxy
+          - stolostron/kube-rbac-proxy
           - stolostron/multicluster-observability-operator
           - stolostron/observatorium
           - stolostron/observatorium-operator
-          - stolotstron/thanos-receive-controller
+          - stolostron/thanos-receive-controller
           - stolostron/kube-thanos
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+
       - name: Get auth token to create pull request for ${{ matrix.repo }}
         if: github.event_name != 'pull_request'
         id: pr
         uses: getsentry/action-github-app-token@v3
         with:
-          app_id: ${{ secrets.pr-app-id }}
-          private_key: ${{ secrets.pr-app-private-key }}
+          app_id: ${{ secrets.ACM_APP_ID }}
+          private_key: ${{ secrets.ACM_APP_PRIVATE_KEY }}
           scope: ${{ matrix.repo }}
+
       - name: List PRs and check for Konflux
         env:
           GH_TOKEN: ${{ steps.pr.outputs.token }}
@@ -59,12 +56,15 @@ jobs:
           else
             echo "konflux_pr_exists=0" >> $GITHUB_ENV
             echo "PR_URL=" >> $GITHUB_ENV
-          fi
+
       - name: Compose Slack message
         id: slack-message
         run: |
           if [ "${{ env.konflux_pr_exists }}" == "1" ]; then
             echo "message=Unmerged Konflux PRs are present in https://github.com/${{ matrix.repo }}" >> $GITHUB_ENV
+          else
+            echo "message=No Konflux PRs found in ${{ matrix.repo }}" >> $GITHUB_ENV
+            fi
       - name: Send Slack notification
         uses: 8398a7/action-slack@v3
         with:
