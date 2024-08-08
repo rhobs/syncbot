@@ -51,7 +51,7 @@ jobs:
           GH_TOKEN: ${{ steps.pr.outputs.token }}
         id: check-prs
         run: |
-          PR_URL=$(gh pr list --repo ${{ matrix.repo }} --state open --search "Konflux in:title" --json url --jq '.[].url')
+          PR_URL=$(gh pr list --repo ${{ matrix.repo }} --state open --json title,url | grep -i "Konflux" | jq '.[].url')
           if [ -n "$PR_URL" ]; then
             echo "konflux_pr_exists=1" >> $GITHUB_ENV
             echo "PR_URL=$PR_URL" >> $GITHUB_ENV
