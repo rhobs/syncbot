@@ -72,7 +72,7 @@ jobs:
           custom_payload: |
             {
               attachments: [{
-                color: ${{ steps.check-prs.outputs.konflux_pr_exists == '1' && 'red' || 'good' }}
+                color: ${{ steps.check-prs.outputs.konflux_pr_exists == '1' && 'red' || 'good' }},
                 text: "**${{ steps.slack-message.outputs.message }}**",
               }]
             }
