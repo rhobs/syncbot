@@ -58,7 +58,7 @@ jobs:
           else
             echo "konflux_pr_exists=0" >> $GITHUB_ENV
             echo "PR_URL=" >> $GITHUB_ENV
-
+          fi
       - name: Compose Slack message
         id: slack-message
         run: |
