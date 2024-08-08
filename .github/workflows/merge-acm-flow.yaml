@@ -289,6 +289,7 @@ jobs:
           else
             echo "message=PR $PR_URL has been ${{ steps.create-pr.outputs.pull-request-operation || 'updated' }}." >> $GITHUB_OUTPUT
           fi
+          echo "konflux pr exists: ${{ steps.konflux-pr-exists.outputs.konflux_pr_exists }}"
           if [ "${{ steps.konflux-pr-exists.outputs.konflux_pr_exists }}" == "1" ]; then
             echo "konflux_message=New Konflux PRs present in ${{ inputs.downstream }}." >> $GITHUB_OUTPUT
           fi
@@ -308,7 +309,7 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.slack-webhook-url }}
       - uses: 8398a7/action-slack@v3
-        if: github.event_name != 'pull_request' &&  steps.konflux-pr-exists.outputs.konflux_pr_exists == '1'
+        if: github.event_name != 'pull_request' &&  (success() || steps.pr-exists.outputs.pr_exists == '1') && steps.konflux-pr-exists.outputs.konflux_pr_exists == '1'
         continue-on-error: true
         with:
           status: custom
