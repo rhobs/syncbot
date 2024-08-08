@@ -34,7 +34,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-
+      - name: Find github org name from repo name
+        id: org
+        run: |
+          echo "downstream=$(dirname ${{ matrix.repo }})" >> $GITHUB_OUTPUT
       - name: Get auth token to create pull request for ${{ matrix.repo }}
         if: github.event_name != 'pull_request'
         id: pr
@@ -42,8 +45,7 @@ jobs:
         with:
           app_id: ${{ secrets.ACM_APP_ID }}
           private_key: ${{ secrets.ACM_APP_PRIVATE_KEY }}
-          scope: ${{ matrix.repo }}
-
+          scope: ${{ steps.org.outputs.downstream }}
       - name: List PRs and check for Konflux
         env:
           GH_TOKEN: ${{ steps.pr.outputs.token }}
