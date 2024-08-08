@@ -269,7 +269,7 @@ jobs:
         run: |
             PR_URL=$(gh pr list --repo ${{ inputs.downstream }} --state open | grep -i konflux)
             echo "PR_URL=$PR_URL"
-            if [ -n "$PR_URL" ]; then
+            if [ ! -z "$PR_URL" ]; then
               echo "konflux_pr_exists=1" >> $GITHUB_OUTPUT
             else
               echo "konflux_pr_exists=0" >> $GITHUB_OUTPUT
