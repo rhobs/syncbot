@@ -73,7 +73,7 @@ jobs:
             {
               attachments: [{
                 color: 'danger',
-                text: "**${{ steps.slack-message.outputs.message }}**",
+                text: "${{ steps.slack-message.outputs.message }}",
               }]
             }
         env:
