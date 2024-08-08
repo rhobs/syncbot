@@ -267,7 +267,7 @@ jobs:
         id: konflux-pr-exists
         if: github.event_name != 'pull_request' && failure()
         run: |
-            PR_URL=$(gh pr list --json url --jq '.[0].url' --repo ${{ inputs.downstream }} --state open  | grep -i konflux)
+            PR_URL=$(gh pr list --repo ${{ inputs.downstream }} --state open | grep -i konflux)
             echo "PR_URL=$PR_URL"
             if [ ! -n "$PR_URL" ]; then
               echo "konflux_pr_exists=1" >> $GITHUB_OUTPUT
