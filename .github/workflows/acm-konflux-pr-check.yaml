@@ -64,11 +64,10 @@ jobs:
         run: |
           if [ "${{ env.konflux_pr_exists }}" == "1" ]; then
             echo "message=Unmerged Konflux PRs are present in https://github.com/${{ matrix.repo }}" >> $GITHUB_ENV
-          else
-            echo "message=No Konflux PRs found in ${{ matrix.repo }}" >> $GITHUB_ENV
-            fi
+          fi
       - name: Send Slack notification
         uses: 8398a7/action-slack@v3
+        if : ${{ env.konflux_pr_exists == '1' }}
         with:
           status: custom
           fields: workflow
