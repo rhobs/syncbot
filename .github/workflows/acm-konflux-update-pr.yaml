@@ -1,0 +1,85 @@
+name: Check Konflux PRs in Downstream Repos
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 1' #@weekly
+  pull_request:
+    paths:
+      - '.github/workflows/acm-konflux-update-pr.yaml'
+  push:
+    paths:
+      - '.github/workflows/acm-konflux-update-pr.yaml'
+
+jobs:
+  check-konflux-prs:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        repo:
+          - stolostron/thanos
+          - stolostron/node-exporter
+          - stolostron/kube-state-metrics
+          - stolostron/prometheus
+          - stolostron/prometheus-alertmanager
+          - stolostron/prometheus-operator
+          - stolostron/grafana
+          - stolostron/kube-rbac-proxy
+          - stolostron/multicluster-observability-operator
+          - stolostron/observatorium
+          - stolostron/observatorium-operator
+          - stolostron/thanos-receive-controller
+          - stolostron/kube-thanos
+
+    steps:
+      - name: Checkout upstream
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ matrix.repo }}
+          fetch-depth: 0
+      - name: Find github org name from repo name
+        id: org
+        run: |
+          echo "downstream=$(dirname ${{ matrix.repo }})" >> $GITHUB_OUTPUT
+      - name: Get auth token to list pull request for ${{ matrix.repo }}
+        if: github.event_name != 'pull_request'
+        id: pr
+        uses: getsentry/action-github-app-token@v3
+        with:
+          app_id: ${{ secrets.ACM_APP_ID }}
+          private_key: ${{ secrets.ACM_APP_PRIVATE_KEY }}
+          scope: ${{ steps.org.outputs.downstream }}
+      - name: List PRs and check for Konflux
+        id: check-prs
+        if: github.event_name != 'pull_request'
+        run: |
+          PR_LIST=$(gh pr list --repo ${{ matrix.repo }} --state open --json title)
+          KONFLUX_PR=$(echo "$PR_LIST" | jq '.[] | select(.title | ascii_downcase | contains("konflux"))')
+          if [ -n "$KONFLUX_PR" ]; then
+            echo "konflux_pr_exists=1" >> $GITHUB_OUTPUT
+          else
+            echo "konflux_pr_exists=0" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ steps.pr.outputs.token }}
+      - name: Compose Slack message
+        id: slack-message
+        run: |
+          if [ "${{ steps.check-prs.outputs.konflux_pr_exists }}" == "1" ]; then
+            echo "message=Unmerged Konflux PRs are present in https://github.com/${{ matrix.repo }}" >> $GITHUB_OUTPUT
+          fi
+      - name: Send Slack notification
+        uses: 8398a7/action-slack@v3
+        if : ${{ steps.check-prs.outputs.konflux_pr_exists == '1' }}
+        with:
+          status: custom
+          fields: workflow
+          custom_payload: |
+            {
+              attachments: [{
+                color: 'danger',
+                text: "${{ steps.slack-message.outputs.message }}",
+              }]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACM_SLACK_WEBHOOK_URL }}
