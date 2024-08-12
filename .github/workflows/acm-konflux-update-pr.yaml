@@ -37,12 +37,11 @@ jobs:
         with:
           repository: ${{ matrix.repo }}
           fetch-depth: 0
-          ref: release-2.12
       - name: Find github org name from repo name
         id: org
         run: |
           echo "downstream=$(dirname ${{ matrix.repo }})" >> $GITHUB_OUTPUT
-      - name: Get auth token to create pull request for ${{ matrix.repo }}
+      - name: Get auth token to list pull request for ${{ matrix.repo }}
         if: github.event_name != 'pull_request'
         id: pr
         uses: getsentry/action-github-app-token@v3
@@ -52,9 +51,11 @@ jobs:
           scope: ${{ steps.org.outputs.downstream }}
       - name: List PRs and check for Konflux
         id: check-prs
+        if: github.event_name != 'pull_request'
         run: |
-          PR_URL=$(gh pr list --repo ${{ matrix.repo }} --state open  | grep -i "Konflux")
-          if [ ! -z "$PR_URL" ]; then
+          PR_LIST=$(gh pr list --repo ${{ matrix.repo }} --state open --json title)
+          KONFLUX_PR=$(echo "$PR_LIST" | jq '.[] | select(.title | ascii_downcase | contains("konflux"))')
+          if [ -n "$KONFLUX_PR" ]; then
             echo "konflux_pr_exists=1" >> $GITHUB_OUTPUT
           else
             echo "konflux_pr_exists=0" >> $GITHUB_OUTPUT
