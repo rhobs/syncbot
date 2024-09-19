@@ -48,6 +48,11 @@ on:
         required: false
         default: ''
         type: string
+      go-mod-tidy:
+        description: Run `go mod tidy` after a merge
+        required: false
+        default: true
+        type: boolean
     secrets:
       cloner-app-id:
         description: Github ID of cloner app
@@ -186,6 +191,7 @@ jobs:
         with:
           node-version: ${{ inputs.node-version }}
       - name: go mod tidy + vendor
+        if: ${{ inputs.go-mod-tidy }}
         run: |
           go mod tidy
           git add go.mod go.sum 
