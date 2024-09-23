@@ -1,0 +1,66 @@
+name: ACM Grafana merger
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 1' #@weekly
+  pull_request:
+    paths:
+    - '.github/workflows/merge-acm-flow.yaml'
+    - '.github/workflows/merge-acm-grafana.yaml'
+  push:
+    paths:
+    - '.github/workflows/merge-acm-flow.yaml'
+    - '.github/workflows/merge-acm-grafana.yaml'
+jobs:
+  grafana-merge:
+    uses: ./.github/workflows/merge-acm-flow.yaml
+    with:
+      upstream: grafana/grafana
+      downstream: stolostron/grafana
+      sandbox: rhobs/acm-grafana
+      go-version: "1.22"
+      node-version: "20"
+      go-mod-tidy: false
+      restore-downstream: >-
+        OWNERS
+      restore-upstream: >-
+        .drone.yml
+        CHANGELOG.md
+        docs
+        go.mod
+        go.sum
+        go.work
+        go.work.sum
+        pkg
+        lerna.json
+        package.json
+        packages
+        public/app/
+        yarn.lock
+      assets-cmd: |
+        # get rid of old assets as new filenames are generated
+        rm -rf ./public/build/
+
+        # generate nodejs files, using docker since it appears to be problematic doing
+        # it directly in the github action runner.
+        docker build --target js-builder -t grafana-js-build .
+        docker create --name grafana-jsbuild grafana-js-build:latest
+        docker cp grafana-jsbuild:/tmp/grafana/public/build ./public/
+        docker rm grafana-jsbuild
+
+        # Generate go files with wire
+        go mod download
+        go run ./pkg/build/wire/cmd/wire/main.go gen -tags oss ./pkg/server
+
+        # Commit assets
+        git add pkg/server/wire_gen.go ./public/build ./public/app/plugins/datasource/*/dist/*
+        git diff --cached --exit-code || git commit -s -m "[bot] assets: generate"
+      downstream-version-expression: |
+        sed -n -E 's/^.*\"version\": *\"([0-9]+\.[0-9]+\.[0-9]+)\".*$/v\1/p' https://raw.githubusercontent.com/stolostron/grafana/release-2.12/package.json
+    secrets:
+      pr-app-id: ${{ secrets.ACM_APP_ID }}
+      pr-app-private-key: ${{ secrets.ACM_APP_PRIVATE_KEY }}
+      cloner-app-id: ${{ secrets.ACM_CLONER_APP_ID }}
+      cloner-app-private-key: ${{ secrets.ACM_CLONER_APP_PRIVATE_KEY }}
+      slack-webhook-url: ${{ secrets.ACM_SLACK_WEBHOOK_URL }}

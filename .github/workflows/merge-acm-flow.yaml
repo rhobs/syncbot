@@ -48,6 +48,11 @@ on:
         required: false
         default: ''
         type: string
+      go-mod-tidy:
+        description: Run `go mod tidy` after a merge
+        required: false
+        default: true
+        type: boolean
     secrets:
       cloner-app-id:
         description: Github ID of cloner app
@@ -82,9 +87,11 @@ jobs:
       - name: Find github org name from repo name
         id: org
         run: |
-          echo "upstream=$(dirname ${{ inputs.upstream }})" >> $GITHUB_OUTPUT
-          echo "downstream=$(dirname ${{ inputs.downstream }})" >> $GITHUB_OUTPUT
-          echo "sandbox=$(dirname ${{ inputs.sandbox }})" >> $GITHUB_OUTPUT
+          {
+          echo "upstream=$(dirname ${{ inputs.upstream }})"
+          echo "downstream=$(dirname ${{ inputs.downstream }})"
+          echo "sandbox=$(dirname ${{ inputs.sandbox }})"
+          } >> "$GITHUB_OUTPUT"
           DOWNSTREAM_VERSION=$(curl -sL "https://raw.githubusercontent.com/${{ inputs.downstream }}/${{ inputs.downstream-branch }}/VERSION")
           if [[ "${DOWNSTREAM_VERSION}" =~ ^$|"404: Not Found" ]]; then
             # Strip the trailing URL from the expression.
@@ -101,7 +108,7 @@ jobs:
               exit 1
             fi
           fi
-          echo "downstream-version=${DOWNSTREAM_VERSION}" >> $GITHUB_OUTPUT
+          echo "downstream-version=${DOWNSTREAM_VERSION}" >> "$GITHUB_OUTPUT"
       - uses: madhead/semver-utils@latest
         id: version
         with:
@@ -114,14 +121,14 @@ jobs:
           SEMVER_RESULT="${{ steps.version.outputs.comparison-result }}"
           echo "${{ inputs.downstream }}@${{ steps.org.outputs.downstream-version }} ${SEMVER_RESULT} ${{ inputs.upstream }}@${{ steps.upstream.outputs.release }}"
           if [ "${SEMVER_RESULT}" == "<" ]; then
-            echo "status=outdated" >> $GITHUB_OUTPUT
+            echo "status=outdated" >> "$GITHUB_OUTPUT"
             echo "::notice::downstream outdated"
           elif [ "${SEMVER_RESULT}" == "=" ]; then
-            echo "status=uptodate" >> $GITHUB_OUTPUT
+            echo "status=uptodate" >> "$GITHUB_OUTPUT"
             echo "::notice::downstream up-to-date"
             exit 0
           else
-            echo "status=ahead" >> $GITHUB_OUTPUT
+            echo "status=ahead" >> "$GITHUB_OUTPUT"
             echo "::notice::downstream ahead"
             exit 0
           fi
@@ -139,7 +146,7 @@ jobs:
       - name: Merge with upstream ${{ steps.upstream.outputs.release }} tag
         id: merge
         run: |
-          git merge -X theirs refs/tags/${{ steps.upstream.outputs.release }} --no-edit || echo 'MERGE_CONFLICT=true' >> $GITHUB_OUTPUT
+          git merge -X theirs refs/tags/${{ steps.upstream.outputs.release }} --no-edit || echo 'MERGE_CONFLICT=true' >> "$GITHUB_OUTPUT"
       - name: Resolve conflict using upstream contents
         if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' && inputs.restore-upstream != ''}}
         run: |
@@ -186,6 +193,7 @@ jobs:
         with:
           node-version: ${{ inputs.node-version }}
       - name: go mod tidy + vendor
+        if: ${{ inputs.go-mod-tidy }}
         run: |
           go mod tidy
           git add go.mod go.sum 
