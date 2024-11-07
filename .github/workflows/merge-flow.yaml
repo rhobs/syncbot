@@ -7,10 +7,6 @@ on:
         default: '16'
         required: false
         type: string
-      go-version:
-        description: go version
-        required: true
-        type: string
       upstream:
         description: Upstream repo path in owner/repo format
         required: true
@@ -82,9 +78,11 @@ jobs:
       - name: Find github org name from repo name
         id: org
         run: |
-          echo "upstream=$(dirname ${{ inputs.upstream }})" >> $GITHUB_OUTPUT
-          echo "downstream=$(dirname ${{ inputs.downstream }})" >> $GITHUB_OUTPUT
-          echo "sandbox=$(dirname ${{ inputs.sandbox }})" >> $GITHUB_OUTPUT
+          {
+            echo "upstream=$(dirname ${{ inputs.upstream }})"
+            echo "downstream=$(dirname ${{ inputs.downstream }})"
+            echo "sandbox=$(dirname ${{ inputs.sandbox }})"
+          } >> "$GITHUB_OUTPUT"
           DOWNSTREAM_VERSION=$(curl -sL "https://raw.githubusercontent.com/${{ inputs.downstream }}/${{ inputs.downstream-branch }}/VERSION")
           if [[ "${DOWNSTREAM_VERSION}" =~ ^$|"404: Not Found" ]]; then
             # Strip the trailing URL from the expression.
@@ -125,7 +123,7 @@ jobs:
             echo "::notice::downstream ahead"
             exit 0
           fi
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           repository: ${{ inputs.downstream }}
           fetch-depth: 0
@@ -177,10 +175,10 @@ jobs:
           echo "$version_from_tag" > VERSION
           git add VERSION
           git diff --cached --exit-code || git commit -s -m "[bot] add VERSION file with ${version_from_tag}"
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v5
         with:
-          go-version: ${{ inputs.go-version }}
-      - uses: actions/setup-node@v2
+          go-version-file: go.mod
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
       - name: Remove dependabot configuration
@@ -208,7 +206,7 @@ jobs:
       - name: Get auth token to create pull request for ${{ inputs.downstream }}
         if: github.event_name != 'pull_request'
         id: pr
-        uses: getsentry/action-github-app-token@v1
+        uses: getsentry/action-github-app-token@v3
         with:
           app_id: ${{ secrets.pr-app-id }}
           private_key: ${{ secrets.pr-app-private-key }}
@@ -216,7 +214,7 @@ jobs:
       - name: Get auth token to push to ${{ inputs.sandbox }}
         if: github.event_name != 'pull_request'
         id: cloner
-        uses: getsentry/action-github-app-token@v1
+        uses: getsentry/action-github-app-token@v3
         with:
           app_id: ${{ secrets.cloner-app-id }}
           private_key: ${{ secrets.cloner-app-private-key }}

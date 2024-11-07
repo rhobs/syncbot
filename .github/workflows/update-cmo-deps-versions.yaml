@@ -10,7 +10,6 @@ jobs:
   versions-update:
     uses: ./.github/workflows/cmo-make-targets.yaml
     with:
-      go-version: "1.22"
       make-targets: versions generate
       pr-title: "[bot] Synchronize versions of the downstream components"
       pr-body: |
