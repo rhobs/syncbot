@@ -1,0 +1,32 @@
+name: Prometheus rc versions tester
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *' #@daily
+  pull_request:
+    paths:
+    - '.github/workflows/merge-flow.yaml'
+    - '.github/workflows/merge-prometheus.yaml'
+    - '.github/workflows/test-rc-prometheus.yaml'
+  push:
+    paths:
+    - '.github/workflows/merge-flow.yaml'
+    - '.github/workflows/merge-prometheus.yaml'
+    - '.github/workflows/test-rc-prometheus.yaml'
+jobs:
+  prometheus-rc-test:
+    uses: ./.github/workflows/merge-prometheus.yaml
+    with:
+      upstream-version-regex: '^v\d+\.\d+\.\d+-rc\.\d+$'
+      sandbox-branch-prefix: automated-rc-tests
+      # The PRs are only meant to run tests
+      pr-labels: 'do-not-merge/hold'
+      pr-title-prefix: 'FOR TESTS ONLY:'
+
+    secrets:
+      pr-app-id: ${{ secrets.APP_ID }}
+      pr-app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
+      cloner-app-id: ${{ secrets.CLONER_APP_ID }}
+      cloner-app-private-key: ${{ secrets.CLONER_APP_PRIVATE_KEY }}
+      slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
