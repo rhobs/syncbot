@@ -161,9 +161,11 @@ jobs:
         run: git merge --continue
       - name: Add VERSION file if not present
         run: |
+          is_version_file_present_upstream=$(git ls-tree ${{ steps.upstream.outputs.release }} | grep VERSION || true)
           # All tags use the vX.Y.Z format currently.
           version_from_tag=$(echo ${{ steps.upstream.outputs.release }} | sed -e "s/^v//")
-          if [ -f VERSION ]; then
+          # Perform check only if both remotes have the VERSION file.
+          if [ -n "$is_version_file_present_upstream" ] && [ -f VERSION ]; then
             version_from_file=$(cat VERSION)
             if [ "$version_from_tag" != "$version_from_file" ];then
               echo "::error:: tag version ${version_from_tag} doesn't correspond to version ${version_from_file} from VERSION file"
