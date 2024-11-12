@@ -82,9 +82,11 @@ jobs:
       - name: Find github org name from repo name
         id: org
         run: |
-          echo "upstream=$(dirname ${{ inputs.upstream }})" >> $GITHUB_OUTPUT
-          echo "downstream=$(dirname ${{ inputs.downstream }})" >> $GITHUB_OUTPUT
-          echo "sandbox=$(dirname ${{ inputs.sandbox }})" >> $GITHUB_OUTPUT
+          {
+          echo "upstream=$(dirname ${{ inputs.upstream }})"
+          echo "downstream=$(dirname ${{ inputs.downstream }})"
+          echo "sandbox=$(dirname ${{ inputs.sandbox }})" 
+          } >> "$GITHUB_OUTPUT"
           DOWNSTREAM_VERSION=$(curl -sL "https://raw.githubusercontent.com/${{ inputs.downstream }}/${{ inputs.downstream-branch }}/VERSION")
           if [[ "${DOWNSTREAM_VERSION}" =~ ^$|"404: Not Found" ]]; then
             # Strip the trailing URL from the expression.
@@ -101,7 +103,7 @@ jobs:
               exit 1
             fi
           fi
-          echo "downstream-version=${DOWNSTREAM_VERSION}" >> $GITHUB_OUTPUT
+          echo "downstream-version=${DOWNSTREAM_VERSION}" >> "$GITHUB_OUTPUT"
       - uses: madhead/semver-utils@latest
         id: version
         with:
@@ -114,18 +116,18 @@ jobs:
           SEMVER_RESULT="${{ steps.version.outputs.comparison-result }}"
           echo "${{ inputs.downstream }}@${{ steps.org.outputs.downstream-version }} ${SEMVER_RESULT} ${{ inputs.upstream }}@${{ steps.upstream.outputs.release }}"
           if [ "${SEMVER_RESULT}" == "<" ]; then
-            echo "status=outdated" >> $GITHUB_OUTPUT
+            echo "status=outdated" >> "$GITHUB_OUTPUT"
             echo "::notice::downstream outdated"
           elif [ "${SEMVER_RESULT}" == "=" ]; then
-            echo "status=uptodate" >> $GITHUB_OUTPUT
+            echo "status=uptodate" >> "$GITHUB_OUTPUT"
             echo "::notice::downstream up-to-date"
             exit 0
           else
-            echo "status=ahead" >> $GITHUB_OUTPUT
+            echo "status=ahead" >> "$GITHUB_OUTPUT"
             echo "::notice::downstream ahead"
             exit 0
           fi
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           repository: ${{ inputs.downstream }}
           fetch-depth: 0
@@ -139,7 +141,7 @@ jobs:
       - name: Merge with upstream ${{ steps.upstream.outputs.release }} tag
         id: merge
         run: |
-          git merge refs/tags/${{ steps.upstream.outputs.release }} --no-edit || echo 'MERGE_CONFLICT=true' >> $GITHUB_OUTPUT
+          git merge refs/tags/${{ steps.upstream.outputs.release }} --no-edit || echo 'MERGE_CONFLICT=true' >> "$GITHUB_OUTPUT"
       - name: Resolve conflict using upstream contents
         if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' && inputs.restore-upstream != ''}}
         run: |
@@ -175,10 +177,10 @@ jobs:
           echo "$version_from_tag" > VERSION
           git add VERSION
           git diff --cached --exit-code || git commit -s -m "[bot] add VERSION file with ${version_from_tag}"
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v5
         with:
           go-version: ${{ inputs.go-version }}
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
       - name: Remove dependabot configuration
@@ -261,9 +263,9 @@ jobs:
         id: slack-message
         run: |
           if [ "${{ steps.create-pr.outputs.pull-request-url }}" == "" ] || [ ${{ steps.fork-sync.outputs.status }} == "uptodate" ] || [ ${{ steps.fork-sync.outputs.status }} == "ahead" ] ; then
-            echo "message=${{ inputs.downstream }} is already ${{ steps.fork-sync.outputs.status }} with tag ${{ steps.org.outputs.downstream-version }}." >> $GITHUB_OUTPUT
+            echo "message=${{ inputs.downstream }} is already ${{ steps.fork-sync.outputs.status }} with tag ${{ steps.org.outputs.downstream-version }}." >> "$GITHUB_OUTPUT"
           else
-            echo "message=PR ${{ steps.create-pr.outputs.pull-request-url }} has been ${{ steps.create-pr.outputs.pull-request-operation || 'updated' }}." >> $GITHUB_OUTPUT
+            echo "message=PR ${{ steps.create-pr.outputs.pull-request-url }} has been ${{ steps.create-pr.outputs.pull-request-operation || 'updated' }}." >> "$GITHUB_OUTPUT"
           fi
       - uses: 8398a7/action-slack@v3
         if: github.event_name != 'pull_request' && (success() || steps.fork-sync.outputs.status == 'uptodate' || steps.fork-sync.outputs.status == 'ahead')

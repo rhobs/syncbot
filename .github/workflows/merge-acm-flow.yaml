@@ -264,12 +264,12 @@ jobs:
           if [ "${{ steps.create-pr.outcome }}" != "success" ]; then
             echo "${{ steps.create-pr.outcome }}"
             PR_URL=$(gh pr list --json url --jq '.[0].url' --repo ${{ inputs.downstream }} --state open  --head automated-updates-acm-${{ inputs.downstream-branch }})
-              if [ ! -z "$PR_URL" ]; then
-                echo "pr_exists=1" >> $GITHUB_OUTPUT
-                echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+              if [ -n "$PR_URL" ]; then
+                echo "pr_exists=1" >> "$GITHUB_OUTPUT"
+                echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
                 echo "PR exists >>  $PR_URL"
               else
-                echo "pr_exists=0" >> $GITHUB_OUTPUT
+                echo "pr_exists=0" >> "$GITHUB_OUTPUT"
               fi
           fi
       - name: Compose slack message body
@@ -283,9 +283,9 @@ jobs:
             PR_URL="${{ steps.create-pr.outputs.pull-request-url }}"
           fi
           if [ "${{ steps.fork-sync.outputs.status }}" == "uptodate" ] || [ "${{ steps.fork-sync.outputs.status }}" == "ahead" ]; then
-            echo "message=${{ inputs.downstream }} is already ${{ steps.fork-sync.outputs.status }} with tag ${{ steps.org.outputs.downstream-version }}." >> $GITHUB_OUTPUT
+            echo "message=${{ inputs.downstream }} is already ${{ steps.fork-sync.outputs.status }} with tag ${{ steps.org.outputs.downstream-version }}." >> "$GITHUB_OUTPUT"
           else
-            echo "message=PR $PR_URL has been ${{ steps.create-pr.outputs.pull-request-operation || 'updated' }}." >> $GITHUB_OUTPUT
+            echo "message=PR $PR_URL has been ${{ steps.create-pr.outputs.pull-request-operation || 'updated' }}." >> "$GITHUB_OUTPUT"
           fi
       - uses: 8398a7/action-slack@v3
         if: github.event_name != 'pull_request' && (success() || steps.fork-sync.outputs.status == 'uptodate' || steps.fork-sync.outputs.status == 'ahead' || steps.pr-exists.outputs.pr_exists == '1')

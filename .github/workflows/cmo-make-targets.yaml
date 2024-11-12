@@ -41,11 +41,11 @@ jobs:
   execute-make-targets:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         repository: openshift/cluster-monitoring-operator
         ref: master
-    - uses: actions/setup-go@v2
+    - uses: actions/setup-go@v5
       with:
         go-version: ${{ inputs.go-version }}
     - name: Execute make targets - ${{ inputs.make-targets }}
@@ -53,7 +53,7 @@ jobs:
     - name: Ignore if change is only in jsonnetfile.lock.json
       run: |
         # Reset jsonnetfile.lock.json if no dependencies were updated
-        changedFiles=$(git diff --name-only | grep -v 'jsonnetfile.lock.json' | wc -l)
+        changedFiles=$(git diff --name-only | grep -cv 'jsonnetfile.lock.json')
         if [[ "$changedFiles" -eq 0 ]]; then
           git checkout -- jsonnet/jsonnetfile.lock.json;
         fi
@@ -74,7 +74,7 @@ jobs:
     - name: Find branch name
       id: branch
       run: |
-        echo "sandbox=$(echo ${{ inputs.make-targets }} | sed 's/ /-/g')" >> $GITHUB_OUTPUT
+        echo "sandbox=$(echo ${{ inputs.make-targets }} | sed 's/ /-/g')" >> "$GITHUB_OUTPUT"
     - name: Create Pull Request
       id: create-pr
       uses: rhobs/create-pull-request@v3
@@ -94,9 +94,9 @@ jobs:
       id: slack-message
       run: |
         if [ "${{ steps.create-pr.outputs.pull-request-url }}" == "" ]; then
-          echo "message=No changes detected." >> $GITHUB_OUTPUT
+          echo "message=No changes detected." >> "$GITHUB_OUTPUT"
         else
-          echo "message=PR ${{ steps.create-pr.outputs.pull-request-url }} has been ${{ steps.create-pr.outputs.pull-request-operation || 'updated' }}." >> $GITHUB_OUTPUT
+          echo "message=PR ${{ steps.create-pr.outputs.pull-request-url }} has been ${{ steps.create-pr.outputs.pull-request-operation || 'updated' }}." >> "$GITHUB_OUTPUT"
         fi
     - uses: 8398a7/action-slack@v3
       continue-on-error: true
