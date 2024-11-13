@@ -20,7 +20,6 @@ jobs:
       upstream: prometheus/alertmanager
       downstream: openshift/prometheus-alertmanager
       sandbox: rhobs/prometheus-alertmanager
-      go-version: "1.22"
       restore-upstream: >-
          CHANGELOG.md
          VERSION

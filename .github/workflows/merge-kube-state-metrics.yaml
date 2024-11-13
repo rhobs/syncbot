@@ -20,7 +20,6 @@ jobs:
       upstream: kubernetes/kube-state-metrics
       downstream: openshift/kube-state-metrics
       sandbox: rhobs/kube-state-metrics
-      go-version: "1.22"
       restore-upstream: |
         CHANGELOG.md .github/ Dockerfile docs/ go.mod
       restore-downstream: OWNERS

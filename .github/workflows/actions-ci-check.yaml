@@ -6,3 +6,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: reviewdog/action-actionlint@v1
+        with:
+          fail_on_error: "true"
+          # Disable shellcheck tool because it's too nit-picky with inlined Bash commands.
+          actionlint_flags: '-shellcheck=""'

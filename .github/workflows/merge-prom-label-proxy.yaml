@@ -19,7 +19,6 @@ jobs:
       upstream: prometheus-community/prom-label-proxy
       downstream: openshift/prom-label-proxy
       sandbox: rhobs/prom-label-proxy
-      go-version: "1.22"
       restore-downstream: >-
          OWNERS
       restore-upstream: >-
