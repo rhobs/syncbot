@@ -40,7 +40,7 @@ jobs:
       - name: Find github org name from repo name
         id: org
         run: |
-          echo "downstream=$(dirname ${{ matrix.repo }})" >> $GITHUB_OUTPUT
+          echo "downstream=$(dirname ${{ matrix.repo }})" >> "$GITHUB_OUTPUT"
       - name: Get auth token to list pull request for ${{ matrix.repo }}
         if: github.event_name != 'pull_request'
         id: pr
@@ -56,9 +56,9 @@ jobs:
           PR_LIST=$(gh pr list --repo ${{ matrix.repo }} --state open --json title)
           KONFLUX_PR=$(echo "$PR_LIST" | jq '.[] | select(.title | ascii_downcase | contains("konflux"))')
           if [ -n "$KONFLUX_PR" ]; then
-            echo "konflux_pr_exists=1" >> $GITHUB_OUTPUT
+            echo "konflux_pr_exists=1" >> "$GITHUB_OUTPUT"
           else
-            echo "konflux_pr_exists=0" >> $GITHUB_OUTPUT
+            echo "konflux_pr_exists=0" >> "$GITHUB_OUTPUT"
           fi
         env:
           GH_TOKEN: ${{ steps.pr.outputs.token }}
@@ -66,7 +66,7 @@ jobs:
         id: slack-message
         run: |
           if [ "${{ steps.check-prs.outputs.konflux_pr_exists }}" == "1" ]; then
-            echo "message=Unmerged Konflux PRs are present in https://github.com/${{ matrix.repo }}" >> $GITHUB_OUTPUT
+            echo "message=Unmerged Konflux PRs are present in https://github.com/${{ matrix.repo }}" >> "$GITHUB_OUTPUT"
           fi
       - name: Send Slack notification
         uses: 8398a7/action-slack@v3
