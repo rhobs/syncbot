@@ -19,6 +19,10 @@ jobs:
       upstream: prometheus/prometheus
       downstream: openshift/prometheus
       sandbox: rhobs/prometheus
+      # .gitignore was adjusted in https://github.com/openshift/prometheus/pull/227/commits/1303b9a0eac1ed3fd24494457c8344d45d35e871
+      # to keep track of the generated UI assets.    
+      restore-downstream: >-
+        .gitignore
       restore-upstream: >-
         CHANGELOG.md
         VERSION
