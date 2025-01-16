@@ -40,7 +40,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
         repository: openshift/cluster-monitoring-operator
-        ref: master
+        ref: main
     - uses: actions/setup-go@v5
       with:
         go-version-file: go.mod
@@ -81,7 +81,7 @@ jobs:
         author: ${{ env.USER }}
         committer: ${{ env.USER }}
         signoff: true
-        branch: automated-updates-master-${{ steps.branch.outputs.sandbox }}
+        branch: automated-updates-main-${{ steps.branch.outputs.sandbox }}
         delete-branch: true
         token: ${{ steps.pr.outputs.token }}
         push-to-fork: rhobs/cluster-monitoring-operator
