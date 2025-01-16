@@ -3,7 +3,7 @@
 Workflows to automate Openshift monitoring dependency upgrades.
 
 ## Introduction
-Cluster Monitoring Operator relies on various upstream components to fulfill the monitoring needs for Openshift. [Here is a list](https://github.com/openshift/cluster-monitoring-operator/blob/master/jsonnet/versions.yaml) of those components,
+Cluster Monitoring Operator relies on various upstream components to fulfill the monitoring needs for Openshift. [Here is a list](https://github.com/openshift/cluster-monitoring-operator/blob/main/jsonnet/versions.yaml) of those components,
 
 - [prometheus](https://github.com/openshift/prometheus)
 - [prometheus-alertmanager](https://github.com/openshift/prometheus-alertmanager)
