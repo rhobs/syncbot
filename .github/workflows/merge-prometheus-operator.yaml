@@ -27,6 +27,8 @@ jobs:
         example
         go.mod
         go.sum
+        scripts/go.mod
+        scripts/go.sum
         pkg
     secrets:
       pr-app-id: ${{ secrets.APP_ID }}
