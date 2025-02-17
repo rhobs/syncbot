@@ -23,6 +23,7 @@ jobs:
       restore-upstream: >-
          CHANGELOG.md
          VERSION
+         .promu.yml
          go.mod
          go.sum
       assets-cmd: |
