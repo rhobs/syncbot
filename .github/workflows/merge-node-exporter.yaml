@@ -27,6 +27,7 @@ jobs:
          collector
          go.mod
          go.sum
+         .github/workflows/
     secrets:
       pr-app-id: ${{ secrets.APP_ID }}
       pr-app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
