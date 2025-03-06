@@ -26,6 +26,9 @@ jobs:
         go.mod
         go.sum
         .golangci.yml
+        discovery
+        promql
+        storage
       assets-cmd: |
         # Only compress assets if assets actually changed
         # The git diff relies on gits remote naming. The merge-flow checks out
