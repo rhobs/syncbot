@@ -25,6 +25,7 @@ jobs:
       restore-downstream: >-
         OWNERS
       restore-upstream: >-
+        .betterer.results
         .drone.yml
         CHANGELOG.md
         docs
@@ -33,11 +34,13 @@ jobs:
         go.work
         go.work.sum
         pkg
+        scripts
         lerna.json
         package.json
         packages
         public/app/
         yarn.lock
+        SECURITY.md
       assets-cmd: |
         # get rid of old assets as new filenames are generated
         rm -rf ./public/build/
