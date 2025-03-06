@@ -27,8 +27,6 @@ jobs:
       restore-downstream: >-
         OWNERS
         docs
-      downstream-version-expression: |
-         sed -n -E '1 s/^[^0-9]*(([0-9]+\.)*[0-9]+).*$/v\1/p' https://raw.githubusercontent.com/stolostron/kube-state-metrics/refs/heads/${{ inputs.downstream-branch }}/CHANGELOG.md
     secrets:
       pr-app-id: ${{ secrets.ACM_APP_ID }}
       pr-app-private-key: ${{ secrets.ACM_APP_PRIVATE_KEY }}
