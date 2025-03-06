@@ -19,8 +19,8 @@ jobs:
       upstream: grafana/grafana
       downstream: stolostron/grafana
       sandbox: rhobs/acm-grafana
-      go-version: "1.22"
-      node-version: "20"
+      go-version: "1.23"
+      node-version: "22"
       go-mod-tidy: false
       restore-downstream: >-
         OWNERS

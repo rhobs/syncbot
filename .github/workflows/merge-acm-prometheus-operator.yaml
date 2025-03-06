@@ -19,7 +19,7 @@ jobs:
       upstream: prometheus-operator/prometheus-operator
       downstream: stolostron/prometheus-operator
       sandbox: rhobs/acm-prometheus-operator
-      go-version: "1.21"
+      go-version: "1.23"
       restore-upstream: >-
         CHANGELOG.md
         Documentation
