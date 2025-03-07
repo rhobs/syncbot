@@ -22,7 +22,7 @@ on:
       downstream-branch:
         description: Downstream branch to create PR
         required: false
-        default: release-2.12
+        default: release-2.14
         type: string
       sandbox:
         description: Sandbox repo path in owner/repo format. Used as a base to create PR against downstream.
@@ -170,15 +170,18 @@ jobs:
       - name: Continue after merge conflict
         if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' }}
         run: git merge --continue
-      - name: Add VERSION file if not present
+      - name: Add or update VERSION file
         run: |
           # All tags use the vX.Y.Z format currently.
           version_from_tag=$(echo ${{ steps.upstream.outputs.release }} | sed -e "s/^v//")
           if [ -f VERSION ]; then
             version_from_file=$(cat VERSION)
             if [ "$version_from_tag" != "$version_from_file" ];then
-              echo "::error:: tag version ${version_from_tag} doesn't correspond to version ${version_from_file} from VERSION file"
-              exit 1
+              echo "Updating version file to ${version_from_tag}"
+              echo "$version_from_tag" > VERSION
+              git add VERSION
+              git diff --cached --exit-code || git commit -s -m "[bot] update VERSION file with ${version_from_tag}"
+              exit 0
             fi
             echo "::notice::VERSION file already present"
             exit 0

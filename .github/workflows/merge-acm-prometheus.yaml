@@ -19,13 +19,16 @@ jobs:
       upstream: prometheus/prometheus
       downstream: stolostron/prometheus
       sandbox: rhobs/acm-prometheus
-      go-version: "1.21"
+      go-version: "1.23"
       restore-upstream: >-
         CHANGELOG.md
         VERSION
         go.mod
         go.sum
         .golangci.yml
+        discovery
+        promql
+        storage
       assets-cmd: |
         # Only compress assets if assets actually changed
         # The git diff relies on gits remote naming. The merge-flow checks out

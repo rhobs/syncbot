@@ -20,7 +20,7 @@ jobs:
       upstream: prometheus/alertmanager
       downstream: stolostron/prometheus-alertmanager
       sandbox: rhobs/acm-prometheus-alertmanager
-      go-version: "1.22"
+      go-version: "1.23"
       restore-upstream: >-
         CHANGELOG.md
         VERSION
