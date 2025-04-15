@@ -11,6 +11,11 @@ on:
         description: Upstream repo path in owner/repo format
         required: true
         type: string
+      upstream-version-regex:
+        description: Regex that the upstream version should match
+        required: false
+        default: '^v\d+\.\d+\.\d+$'
+        type: string
       downstream:
         description: Downstream repo path in owner/repo format
         required: true
@@ -23,6 +28,11 @@ on:
       sandbox:
         description: Sandbox repo path in owner/repo format. Used as a base to create PR against downstream.
         required: true
+        type: string
+      sandbox-branch-prefix:
+        description: Prefix fot the PR branch 
+        required: false
+        default: 'automated-updates'
         type: string
       restore-upstream:
         description: List of files to be reset using upstream content on merge conflict.
@@ -41,6 +51,16 @@ on:
         type: string
       downstream-version-expression:
         description: Expression to extract downstream version from downstream repo. Follows the https://www.npmjs.com/package/semver spec.
+        required: false
+        default: ''
+        type: string
+      pr-labels:
+        description: Labels to add to the PR
+        required: false
+        default: ''
+        type: string
+      pr-title-prefix:
+        description: Prefix for the PR title
         required: false
         default: ''
         type: string
@@ -67,14 +87,12 @@ jobs:
     name: Perform merge operation
     steps:
       - name: Get latest upstream tag
+        uses: oprypin/find-latest-tag@v1
         id: upstream
-        run: |
-          UPSTREAM_VERSION=$(curl --fail --silent "https://api.github.com/repos/${{ inputs.upstream }}/releases/latest" | jq -r '.tag_name')
-          if [ "$UPSTREAM_VERSION" == "" ]; then
-              echo "upstream-version is invalid" >> "$GITHUB_OUTPUT"
-              exit 1
-          fi
-          echo "release=${UPSTREAM_VERSION}" >> "$GITHUB_OUTPUT"
+        with:
+          repository: ${{ inputs.upstream }}
+          releases-only: true
+          regex: ${{ inputs.upstream-version-regex }}
       - name: Find github org name from repo name
         id: org
         run: |
@@ -104,13 +122,13 @@ jobs:
         id: version
         with:
           version: ${{ steps.org.outputs.downstream-version }}
-          compare-to: ${{ steps.upstream.outputs.release }}
+          compare-to: ${{ steps.upstream.outputs.tag }}
           lenient: false # fail if either of the versions cannot be parsed
       - name: Check openshift fork status
         id: fork-sync
         run: |
           SEMVER_RESULT="${{ steps.version.outputs.comparison-result }}"
-          echo "${{ inputs.downstream }}@${{ steps.org.outputs.downstream-version }} ${SEMVER_RESULT} ${{ inputs.upstream }}@${{ steps.upstream.outputs.release }}"
+          echo "${{ inputs.downstream }}@${{ steps.org.outputs.downstream-version }} ${SEMVER_RESULT} ${{ inputs.upstream }}@${{ steps.upstream.outputs.tag }}"
           if [ "${SEMVER_RESULT}" == "<" ]; then
             echo "status=outdated" >> $GITHUB_OUTPUT
             echo "::notice::downstream outdated"
@@ -134,10 +152,10 @@ jobs:
           git config user.email 'github-actions[bot]@users.noreply.github.com'
           git config --global core.editor "/bin/true"
           git fetch https://github.com/${{ inputs.upstream }} --tags
-      - name: Merge with upstream ${{ steps.upstream.outputs.release }} tag
+      - name: Merge with upstream ${{ steps.upstream.outputs.tag }} tag
         id: merge
         run: |
-          git merge refs/tags/${{ steps.upstream.outputs.release }} --no-edit || echo 'MERGE_CONFLICT=true' >> $GITHUB_OUTPUT
+          git merge refs/tags/${{ steps.upstream.outputs.tag }} --no-edit || echo 'MERGE_CONFLICT=true' >> $GITHUB_OUTPUT
       - name: Resolve conflict using upstream contents
         if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' && inputs.restore-upstream != ''}}
         run: |
@@ -159,9 +177,9 @@ jobs:
         run: git merge --continue
       - name: Add VERSION file if not present
         run: |
-          is_version_file_present_upstream=$(git ls-tree ${{ steps.upstream.outputs.release }} | grep VERSION || true)
+          is_version_file_present_upstream=$(git ls-tree ${{ steps.upstream.outputs.tag }} | grep VERSION || true)
           # All tags use the vX.Y.Z format currently.
-          version_from_tag=$(echo ${{ steps.upstream.outputs.release }} | sed -e "s/^v//")
+          version_from_tag=$(echo ${{ steps.upstream.outputs.tag }} | sed -e "s/^v//")
           # Perform check only if both remotes have the VERSION file.
           if [ -n "$is_version_file_present_upstream" ] && [ -f VERSION ]; then
             version_from_file=$(cat VERSION)
@@ -224,7 +242,7 @@ jobs:
         uses: rhobs/create-pull-request@v3
         id: create-pr
         with:
-          title: "[bot] Bump ${{ inputs.downstream }} to ${{ steps.upstream.outputs.release }}"
+          title: "${{ inputs.pr-title-prefix }}[bot] Bump ${{ inputs.downstream }} to ${{ steps.upstream.outputs.tag }}"
           body: |
             ## Description
             This is an automated version bump from CI.
@@ -232,7 +250,7 @@ jobs:
             If you wish to perform this manually, execute the following commands from ${{ inputs.downstream }} repo:
             ```
             git fetch https://github.com/${{ inputs.upstream }} --tags
-            if ! git merge refs/tags/${{ steps.upstream.outputs.release }} --no-edit; then
+            if ! git merge refs/tags/${{ steps.upstream.outputs.tag }} --no-edit; then
               git checkout --theirs ${{ inputs.restore-upstream }}
               git checkout --ours ${{ inputs.restore-downstream }}
               git add ${{ inputs.restore-upstream }} ${{ inputs.restore-downstream }}
@@ -247,10 +265,11 @@ jobs:
               git diff --cached --exit-code || git commit -s -m "[bot] update rh-manifest.txt"
             fi
             ```
+          labels: ${{ inputs.pr-labels }}
           author: 'github-actions[bot]<github-actions[bot]@users.noreply.github.com>'
           committer: 'github-actions[bot]<github-actions[bot]@users.noreply.github.com>'
           signoff: true
-          branch: automated-updates-${{ inputs.downstream-branch }}
+          branch: ${{ inputs.sandbox-branch-prefix }}-${{ inputs.downstream-branch }}
           delete-branch: true
           token: ${{ steps.pr.outputs.token }}
           push-to-fork: ${{ inputs.sandbox }}

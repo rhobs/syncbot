@@ -17,8 +17,12 @@ jobs:
     uses: ./.github/workflows/merge-flow.yaml
     with:
       upstream: prometheus/prometheus
+      upstream-version-regex: ${{ inputs.upstream-version-regex }}
       downstream: openshift/prometheus
       sandbox: rhobs/prometheus
+      sandbox-branch-prefix: ${{ inputs.sandbox-branch-prefix }}
+      pr-labels: ${{ inputs.pr-labels }}
+      pr-title-prefix: ${{ inputs.pr-title-prefix }}
       restore-upstream: >-
         CHANGELOG.md
         VERSION
