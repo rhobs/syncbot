@@ -4,7 +4,7 @@ on:
     inputs:
       node-version:
         description: node version
-        default: '16'
+        default: '22'
         required: false
         type: string
       upstream:
