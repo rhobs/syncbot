@@ -19,6 +19,9 @@ jobs:
       upstream: prometheus/prometheus
       downstream: openshift/prometheus
       sandbox: rhobs/prometheus
+      restore-downstream: >-
+        plugins.yml
+        plugins
       restore-upstream: >-
         CHANGELOG.md
         VERSION
