@@ -22,7 +22,7 @@ on:
       downstream-branch:
         description: Downstream branch to create PR
         required: false
-        default: release-2.14
+        default: release-2.15
         type: string
       sandbox:
         description: Sandbox repo path in owner/repo format. Used as a base to create PR against downstream.
