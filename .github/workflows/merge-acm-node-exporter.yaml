@@ -19,7 +19,7 @@ jobs:
       upstream: prometheus/node_exporter
       downstream: stolostron/node-exporter
       sandbox: rhobs/acm-node-exporter
-      go-version: "1.23"
+      go-version: "1.24"
       restore-downstream: >-
          OWNERS
       restore-upstream: >-
