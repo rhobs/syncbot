@@ -41,6 +41,7 @@ jobs:
         public/app/
         yarn.lock
         SECURITY.md
+        .bingo/
       assets-cmd: |
         # get rid of old assets as new filenames are generated
         rm -rf ./public/build/
