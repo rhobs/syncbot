@@ -38,7 +38,7 @@ jobs:
         lerna.json
         package.json
         packages
-        public/app/
+        public/
         yarn.lock
         SECURITY.md
         .bingo/
