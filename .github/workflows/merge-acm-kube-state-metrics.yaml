@@ -22,11 +22,12 @@ jobs:
       sandbox: rhobs/acm-kube-state-metrics
       go-version: "1.24"
       restore-upstream: >-
-        CHANGELOG.md 
-        VERSION
+        CHANGELOG.md
       restore-downstream: >-
         OWNERS
         docs
+      downstream-version-expression: |
+        sed -n -E 's/^version: \"*([0-9]+\.[0-9]+\.[0-9]+)\"$/v\1/p' https://raw.githubusercontent.com/openshift/kube-state-metrics/main/data.yaml
     secrets:
       pr-app-id: ${{ secrets.ACM_APP_ID }}
       pr-app-private-key: ${{ secrets.ACM_APP_PRIVATE_KEY }}
