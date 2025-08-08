@@ -11,7 +11,7 @@ jobs:
     uses: ./.github/workflows/cmo-make-targets.yaml
     with:
       make-targets: versions generate
-      pr-title: "[bot] Synchronize versions of the downstream components"
+      pr-title: "NO-JIRA: [bot] Synchronize versions of the downstream components"
       pr-body: |
         ## Description
         This pull request updates `jsonnet/versions.yaml` to match with the **already in use** downstream versions of the monitoring components.
