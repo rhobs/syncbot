@@ -20,23 +20,23 @@ jobs:
       downstream: stolostron/prometheus
       sandbox: rhobs/acm-prometheus
       go-version: "1.24"
+      restore-downstream: >-
+        plugins.yml
+        plugins
       restore-upstream: >-
         CHANGELOG.md
         VERSION
         go.mod
         go.sum
         .golangci.yml
-        discovery
-        promql
-        storage
       assets-cmd: |
         # Only compress assets if assets actually changed
         # The git diff relies on gits remote naming. The merge-flow checks out
         # $downstream as origin at the time of writing this code.
         if ! git diff --exit-code origin/main web/ui; then
           make assets-compress
-          find web/ui/static -type f -name '*.gz' -exec git add -f {} \;
-          git add -f web/ui/embed.go
+          find web/ui/static -type f -name '*.gz' -exec git add {} \;
+          git add web/ui/embed.go
           git diff --cached --exit-code || git commit -s -m "[bot] assets: generate"
         fi
 
