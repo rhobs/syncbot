@@ -46,6 +46,7 @@ jobs:
         packages
         public/
         yarn.lock
+        .yarn
         SECURITY.md
         .bingo/
       assets-cmd: |
