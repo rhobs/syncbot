@@ -27,12 +27,18 @@ jobs:
       restore-upstream: >-
         .betterer.results
         .drone.yml
+        apps
         CHANGELOG.md
+        devenv
+        Dockerfile
         docs
+        e2e
+        hack
         go.mod
         go.sum
         go.work
         go.work.sum
+        Makefile
         pkg
         scripts
         lerna.json
