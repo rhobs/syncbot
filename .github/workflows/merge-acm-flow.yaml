@@ -151,7 +151,7 @@ jobs:
         if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' && inputs.restore-upstream != ''}}
         run: |
           echo "reset ${{ inputs.restore-upstream }}"
-          git reset tags/${{ steps.upstream.outputs.release }} -- ${{ inputs.restore-upstream }} || true
+          git checkout --theirs ${{ inputs.restore-upstream }} || true
           git add ${{ inputs.restore-upstream }} || true
       - name: Remove deleted files
         if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' }}
