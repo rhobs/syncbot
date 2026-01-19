@@ -24,6 +24,7 @@ jobs:
         .github/ 
         .markdownlint-cli2.jsonc
         CHANGELOG.md
+        CONTRIBUTING.md
         Dockerfile
         RELEASE.md
         VERSION
