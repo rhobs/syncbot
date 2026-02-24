@@ -26,6 +26,10 @@ jobs:
       restore-upstream: >-
         go.mod
         go.sum
+        Dockerfile
+        Makefile
+        scripts/go.mod
+        scripts/go.sum
         README.md
         manifests/components/release/kustomization.yaml
       downstream-version-expression: |
