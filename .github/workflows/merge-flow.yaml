@@ -138,6 +138,11 @@ jobs:
         id: merge
         run: |
           git merge refs/tags/${{ steps.upstream.outputs.release }} --no-edit || echo 'MERGE_CONFLICT=true' >> $GITHUB_OUTPUT
+      - name: Resolve conflict due to deleted upstream files
+        if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' }}
+        run: |
+            # Remove all files deleted in upstream (UD) before restoring other conflicts
+            git status --porcelain | awk '{ if ($1=="UD") print $2 }' | xargs -r git rm
       - name: Resolve conflict using upstream contents
         if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' && inputs.restore-upstream != ''}}
         run: |
