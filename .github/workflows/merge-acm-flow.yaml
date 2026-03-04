@@ -166,7 +166,7 @@ jobs:
       - name: Resolve conflict due to deleted downstream files
         if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' }}
         run: |
-            git status --porcelain | awk '{ if ($1=="DU") print $2 }' | xargs -I {} git rm {}
+          git status --porcelain | awk '{ if ($1=="UD" || $1=="DU" || $1=="UU" || $1=="U") print $2 }' | xargs -I {} git rm {}
       - name: Continue after merge conflict
         if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' }}
         run: git merge --continue
@@ -191,7 +191,7 @@ jobs:
           git diff --cached --exit-code || git commit -s -m "[bot] add VERSION file with ${version_from_tag}"
       - uses: actions/setup-go@v5
         with:
-          go-version: ${{ inputs.go-version }}
+          go-version-file: go.mod
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
