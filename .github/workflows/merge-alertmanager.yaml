@@ -24,6 +24,7 @@ jobs:
          CHANGELOG.md
          VERSION
          .promu.yml
+         .gitignore
          go.mod
          go.sum
       assets-cmd: |
