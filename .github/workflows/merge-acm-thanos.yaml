@@ -19,7 +19,7 @@ jobs:
       upstream: thanos-io/thanos
       downstream: stolostron/thanos
       sandbox: rhobs/acm-thanos
-      go-version: "1.24"
+      go-version: "1.25"
       restore-downstream: >-
         OWNERS
       restore-upstream: >-

@@ -3,7 +3,7 @@ name: Check Konflux PRs in Downstream Repos
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 0 * * 1' #@weekly
+    - cron: '0 0 */14 * *' # every 14 days (biweekly)
   pull_request:
     paths:
       - '.github/workflows/acm-konflux-update-pr.yaml'

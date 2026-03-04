@@ -20,7 +20,7 @@ jobs:
       upstream: kubernetes/kube-state-metrics
       downstream: stolostron/kube-state-metrics
       sandbox: rhobs/acm-kube-state-metrics
-      go-version: "1.24"
+      go-version: "1.25"
       restore-upstream: >-
         CHANGELOG.md
       restore-downstream: >-
