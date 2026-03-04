@@ -7,10 +7,6 @@ on:
         default: '22'
         required: false
         type: string
-      go-version:
-        description: go version
-        required: true
-        type: string
       upstream:
         description: Upstream repo path in owner/repo format
         required: true
