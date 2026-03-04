@@ -19,6 +19,7 @@ jobs:
       upstream: thanos-io/thanos
       downstream: stolostron/thanos
       sandbox: rhobs/acm-thanos
+      go-mod-tidy: false
       restore-downstream: >-
         OWNERS
       restore-upstream: >-
