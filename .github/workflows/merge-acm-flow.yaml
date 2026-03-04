@@ -165,7 +165,9 @@ jobs:
           git status --porcelain | awk '{ if ($1=="UD" || $1=="DU" || $1=="UU" || $1=="U") print $2 }' | xargs -I {} git rm {}
       - name: Continue after merge conflict
         if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' }}
-        run: git merge --continue
+        run: |
+          git add -A
+          git merge --continue
       - name: Add or update VERSION file
         run: |
           # All tags use the vX.Y.Z format currently.
