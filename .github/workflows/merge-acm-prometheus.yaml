@@ -3,7 +3,7 @@ name: ACM Prometheus merger
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 0 * * 1' #@weekly
+    - cron: '0 0 1,15 * *' #@biweekly
   pull_request:
     paths:
     - '.github/workflows/merge-acm-flow.yaml'
@@ -31,6 +31,9 @@ jobs:
         go.sum
         .golangci.yml
       assets-cmd: |
+        # Force upstream Makefile in case of conflicts
+        git checkout --theirs Makefile || true
+        git add Makefile || true
         # Only compress assets if assets actually changed
         # The git diff relies on gits remote naming. The merge-flow checks out
         # $downstream as origin at the time of writing this code.

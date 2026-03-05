@@ -133,12 +133,12 @@ jobs:
           repository: ${{ inputs.downstream }}
           fetch-depth: 0
           ref: ${{ inputs.downstream-branch }}
-      - name: Fetch all upstream tags
+      - name: Fetch upstream tag
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
           git config --global core.editor "/bin/true"
-          git fetch https://github.com/${{ inputs.upstream }} --tags
+          git fetch https://github.com/${{ inputs.upstream }} tag ${{ steps.upstream.outputs.release }}
       - name: Merge with upstream ${{ steps.upstream.outputs.release }} tag
         id: merge
         run: |
@@ -162,7 +162,7 @@ jobs:
       - name: Resolve conflict due to deleted downstream files
         if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' }}
         run: |
-          git status --porcelain | awk '{ if ($1=="UD" || $1=="DU" || $1=="U") print $2 }' | xargs -I {} git rm {}
+          git status --porcelain | awk '{ if ($1=="UD" || $1=="DU" ||  $1=="U") print $2 }' | xargs -I {} git rm {}
       - name: Continue after merge conflict
         if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' }}
         run: |
@@ -240,11 +240,6 @@ jobs:
             go mod tidy
             go mod vendor
             ${{ inputs.assets-cmd }}
-            if [ -f scripts/rh-manifest.sh ]; then
-              bash scripts/rh-manifest.sh
-              git add rh-manifest.txt
-              git diff --cached --exit-code || git commit -s -m "[bot] update rh-manifest.txt"
-            fi
             ```
           author: 'github-actions[bot]<github-actions[bot]@users.noreply.github.com>'
           committer: 'github-actions[bot]<github-actions[bot]@users.noreply.github.com>'

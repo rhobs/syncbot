@@ -3,7 +3,7 @@ name: ACM Prometheus Operator merger
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 0 * * 1' #@weekly
+    - cron: '0 0 1,15 * *' #@biweekly
   pull_request:
     paths:
     - '.github/workflows/merge-acm-flow.yaml'
