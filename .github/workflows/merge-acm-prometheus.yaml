@@ -33,12 +33,12 @@ jobs:
         # Only compress assets if assets actually changed
         # The git diff relies on gits remote naming. The merge-flow checks out
         # $downstream as origin at the time of writing this code.
-        if ! git diff --exit-code origin/main web/ui; then
+        if ! git diff --exit-code --name-only  origin/main web/ui; then
           rm -rf web/ui/static
           make assets-compress
           find web/ui/static -type f -name '*.gz' -exec git add {} \;
           git add web/ui
-          git diff --cached --exit-code || git commit -s -m "[bot] assets: generate"
+          git diff --cached --exit-code --name-only || git commit -s -m "[bot] assets: generate"
         fi
 
     secrets:
