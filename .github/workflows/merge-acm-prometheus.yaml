@@ -36,7 +36,7 @@ jobs:
         if ! git diff --exit-code origin/main web/ui; then
           make assets-compress
           find web/ui/static -type f -name '*.gz' -exec git add {} \;
-          git add web/ui/
+          git add web/ui
           git diff --cached --exit-code || git commit -s -m "[bot] assets: generate"
         fi
 

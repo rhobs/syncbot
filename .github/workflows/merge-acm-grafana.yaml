@@ -57,7 +57,7 @@ jobs:
         go run ./pkg/build/wire/cmd/wire/main.go gen -tags oss ./pkg/server
 
         # Commit assets
-        git add pkg/server/wire_gen.go ./public/build ./public/app/plugins/
+        git add pkg/server/wire_gen.go ./public/build ./public/app/plugins
         git diff --cached --exit-code || git commit -s -m "[bot] assets: generate"
       downstream-version-expression: |
         sed -n -E 's/^.*\"version\": *\"([0-9]+\.[0-9]+\.[0-9]+)\".*$/v\1/p' https://raw.githubusercontent.com/stolostron/grafana/release-2.17/package.json
