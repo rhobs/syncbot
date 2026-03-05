@@ -25,6 +25,7 @@ jobs:
         plugins
       restore-upstream: >-
         CHANGELOG.md
+        Makefile
         VERSION
         go.mod
         go.sum
