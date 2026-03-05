@@ -162,7 +162,7 @@ jobs:
       - name: Resolve conflict due to deleted downstream files
         if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' }}
         run: |
-          git status --porcelain | awk '{ if ($1=="UD" || $1=="DU" || $1=="UU" || $1=="U") print $2 }' | xargs -I {} git rm {}
+          git status --porcelain | awk '{ if ($1=="UD" || $1=="DU" || $1=="U") print $2 }' | xargs -I {} git rm {}
       - name: Continue after merge conflict
         if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' }}
         run: |
