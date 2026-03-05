@@ -3,7 +3,7 @@ name: ACM Prometheus merger
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 0 * * 1' #@weekly
+    - cron: '0 0 1,15 * *' #@biweekly
   pull_request:
     paths:
     - '.github/workflows/merge-acm-flow.yaml'
@@ -19,12 +19,13 @@ jobs:
       upstream: prometheus/prometheus
       downstream: stolostron/prometheus
       sandbox: rhobs/acm-prometheus
-      go-version: "1.25"
+      go-mod-tidy: false
       restore-downstream: >-
         plugins.yml
         plugins
       restore-upstream: >-
         CHANGELOG.md
+        Makefile
         VERSION
         go.mod
         go.sum
@@ -33,11 +34,10 @@ jobs:
         # Only compress assets if assets actually changed
         # The git diff relies on gits remote naming. The merge-flow checks out
         # $downstream as origin at the time of writing this code.
-        if ! git diff --exit-code origin/main web/ui; then
-          make assets-compress
+        if ! git diff --exit-code --name-only  origin/main web/ui; then
           find web/ui/static -type f -name '*.gz' -exec git add {} \;
-          git add web/ui/embed.go
-          git diff --cached --exit-code || git commit -s -m "[bot] assets: generate"
+          git add web/ui
+          git diff --cached --exit-code --name-only || git commit -s -m "[bot] assets: generate"
         fi
 
     secrets:
