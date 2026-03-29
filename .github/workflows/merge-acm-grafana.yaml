@@ -3,7 +3,7 @@ name: ACM Grafana merger
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 0 * * 1' #@weekly
+    - cron: '0 0 1,15 * *' #@biweekly
   pull_request:
     paths:
     - '.github/workflows/merge-acm-flow.yaml'
@@ -19,7 +19,6 @@ jobs:
       upstream: grafana/grafana
       downstream: stolostron/grafana
       sandbox: rhobs/acm-grafana
-      go-version: "1.25"
       node-version: "22"
       go-mod-tidy: false
       restore-downstream: >-
@@ -58,10 +57,10 @@ jobs:
         go run ./pkg/build/wire/cmd/wire/main.go gen -tags oss ./pkg/server
 
         # Commit assets
-        git add pkg/server/wire_gen.go ./public/build ./public/app/plugins/datasource/*/dist/*
-        git diff --cached --exit-code || git commit -s -m "[bot] assets: generate"
+        git add pkg/server/wire_gen.go ./public/build ./public/app/plugins
+        git diff --cached --exit-code --name-only || git commit -s -m "[bot] assets: generate"
       downstream-version-expression: |
-        sed -n -E 's/^.*\"version\": *\"([0-9]+\.[0-9]+\.[0-9]+)\".*$/v\1/p' https://raw.githubusercontent.com/stolostron/grafana/release-2.12/package.json
+        sed -n -E 's/^.*\"version\": *\"([0-9]+\.[0-9]+\.[0-9]+)\".*$/v\1/p' https://raw.githubusercontent.com/stolostron/grafana/release-2.17/package.json
     secrets:
       pr-app-id: ${{ secrets.ACM_APP_ID }}
       pr-app-private-key: ${{ secrets.ACM_APP_PRIVATE_KEY }}

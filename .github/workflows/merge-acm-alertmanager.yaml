@@ -3,7 +3,7 @@ name: ACM Alertmanager merger
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 0 * * 1' #@weekly
+    - cron: '0 0 1,15 * *' #@biweekly
   pull_request:
     paths:
       - '.github/workflows/merge-acm-flow.yaml'
@@ -20,22 +20,11 @@ jobs:
       upstream: prometheus/alertmanager
       downstream: stolostron/prometheus-alertmanager
       sandbox: rhobs/acm-prometheus-alertmanager
-      go-version: "1.25"
       restore-upstream: >-
         CHANGELOG.md
         VERSION
         go.mod
         go.sum
-      assets-cmd: |
-        # Only compress assets if assets actually changed
-        # The git diff relies on gits remote naming. The merge-flow checks out
-        # $downstream as origin at the time of writing this code.
-        if ! git diff --exit-code origin/master ui/react-app; then
-          make assets-compress
-          find ui/react-app -type f -name '*.gz' -exec git add {} \;
-          git add ui/react-app/embed.go
-          git diff --cached --exit-code || git commit -s -m "[bot] assets: generate"
-        fi
 
     secrets:
       pr-app-id: ${{ secrets.ACM_APP_ID }}
