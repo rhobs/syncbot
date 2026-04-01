@@ -3,7 +3,7 @@ name: ACM Node exporter merger
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 0 * * 1' #@weekly
+    - cron: '0 0 1,15 * *' #@biweekly
   pull_request:
     paths:
     - '.github/workflows/merge-acm-flow.yaml'
@@ -19,7 +19,6 @@ jobs:
       upstream: prometheus/node_exporter
       downstream: stolostron/node-exporter
       sandbox: rhobs/acm-node-exporter
-      go-version: "1.25"
       restore-downstream: >-
          OWNERS
       restore-upstream: >-
