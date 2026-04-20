@@ -26,6 +26,10 @@ jobs:
          .promu.yml
          go.mod
          go.sum
+         docs/
+      restore-downstream: >-
+         .coderabbit.yaml
+         .gitignore
 
     secrets:
       pr-app-id: ${{ secrets.APP_ID }}
