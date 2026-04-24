@@ -19,6 +19,8 @@ jobs:
       upstream: prometheus/prometheus
       downstream: openshift/prometheus
       sandbox: rhobs/prometheus
+      restore-downstream: >-
+        .github/PULL_REQUEST_TEMPLATE.md
       restore-upstream: >-
         CHANGELOG.md
         VERSION
