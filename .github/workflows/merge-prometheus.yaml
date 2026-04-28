@@ -34,7 +34,7 @@ jobs:
         if ! git diff --exit-code origin/main web/ui; then
           # Only build the Mantine UI.
           BUILD_UI=mantine make assets-compress
-          find web/ui/static -type f -name '*.gz' -exec git add {} \;
+          find web/ui/static/mantine-ui -type f -name '*.gz' -exec git add {} \;
           git add web/ui/embed.go
           git diff --cached --exit-code || git commit -s -m "[bot] assets: generate"
         fi
