@@ -30,6 +30,17 @@ jobs:
       restore-downstream: >-
          .coderabbit.yaml
          .gitignore
+      assets-cmd: |
+        # Only regenerate the frontend assets if ui sources actually changed
+        # The git diff relies on gits remote naming. The merge-flow checks out
+        # $downstream as origin at the time of writing this code.
+        if ! git diff --exit-code origin/main ui/app; then
+          git rm -rf --ignore-unmatch ui/app/dist
+          make --always-make ui-elm
+          git add ui/app/dist
+          git diff --cached --exit-code || git commit -s -m "[bot] assets: generate"
+        fi
+      node-version: "24"
 
     secrets:
       pr-app-id: ${{ secrets.APP_ID }}
