@@ -190,8 +190,14 @@ jobs:
       - name: go mod tidy + vendor
         run: |
           go mod tidy
-          go mod vendor
-          git add go.mod go.sum vendor
+          if [ -f go.work ]; then
+            echo "Detected go workspace"
+            go work vendor
+            git add go.mod go.sum go.work.sum vendor
+          else
+            go mod vendor
+            git add go.mod go.sum vendor
+          fi
           git diff --cached --exit-code || git commit -s -m "[bot] vendor: revendor"
       - name: Generate assets
         if: ${{ inputs.assets-cmd != '' }}
