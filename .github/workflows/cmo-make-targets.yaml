@@ -73,7 +73,7 @@ jobs:
         echo sandbox="$(echo ${{ inputs.make-targets }} | sed 's/ /-/g')" >> "$GITHUB_OUTPUT"
     - name: Create Pull Request
       id: create-pr
-      uses: rhobs/create-pull-request@v3
+      uses: peter-evans/create-pull-request@v8
       with:
         commit-message: ${{ inputs.pr-title }}
         title: ${{ inputs.pr-title }}
@@ -85,7 +85,7 @@ jobs:
         delete-branch: true
         token: ${{ steps.pr.outputs.token }}
         push-to-fork: rhobs/cluster-monitoring-operator
-        push-to-fork-token: ${{ steps.cloner.outputs.token }}
+        branch-token: ${{ steps.cloner.outputs.token }}
     - name: Compose slack message body
       id: slack-message
       run: |
