@@ -95,33 +95,29 @@ jobs:
         else
           echo "message=PR ${{ steps.create-pr.outputs.pull-request-url }} has been ${{ steps.create-pr.outputs.pull-request-operation || 'updated' }}." >> "$GITHUB_OUTPUT"
         fi
-    - uses: 8398a7/action-slack@v3
+    - uses: slackapi/slack-github-action@v3
       continue-on-error: true
       if: success()
       with:
-        status: custom
-        fields: workflow
-        custom_payload: |
+        webhook: ${{ secrets.slack-webhook-url }}
+        webhook-type: incoming-webhook
+        payload: |
           {
             attachments: [{
-              color: 'good',
-              text: `${process.env.AS_WORKFLOW}\n ${{ steps.slack-message.outputs.message }}`,
+              color: "good",
+              text: "${{ github.workflow }}\n ${{ steps.slack-message.outputs.message }}"
             }]
           }
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.slack-webhook-url }}
-    - uses: 8398a7/action-slack@v3
+    - uses: slackapi/slack-github-action@v3
       continue-on-error: true
       if: failure()
       with:
-        status: custom
-        fields: workflow
-        custom_payload: |
+        webhook: ${{ secrets.slack-webhook-url }}
+        webhook-type: incoming-webhook
+        payload: |
           {
             attachments: [{
-              color: 'danger',
-              text: `${process.env.AS_WORKFLOW} has failed.`,
+              color: "danger",
+              text: "${{ github.workflow }} has failed."
             }]
           }
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.slack-webhook-url }}
