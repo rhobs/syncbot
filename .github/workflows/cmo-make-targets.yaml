@@ -37,7 +37,7 @@ jobs:
   execute-make-targets:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         repository: openshift/cluster-monitoring-operator
         ref: main
