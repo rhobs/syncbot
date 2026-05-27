@@ -92,8 +92,10 @@ jobs:
       run: |
         if [ "${{ steps.create-pr.outputs.pull-request-url }}" == "" ]; then
           echo "message=No changes detected." >> "$GITHUB_OUTPUT"
+        elif [ "${{ steps.create-pr.outputs.pull-request-operation }}" == "none" ]; then
+          echo "message=PR ${{ steps.create-pr.outputs.pull-request-url }} is ready for review." >> "$GITHUB_OUTPUT"
         else
-          echo "message=PR ${{ steps.create-pr.outputs.pull-request-url }} has been ${{ steps.create-pr.outputs.pull-request-operation || 'updated' }}." >> "$GITHUB_OUTPUT"
+          echo "message=PR ${{ steps.create-pr.outputs.pull-request-url }} has been ${{ steps.create-pr.outputs.pull-request-operation }}." >> "$GITHUB_OUTPUT"
         fi
     - uses: slackapi/slack-github-action@v3
       continue-on-error: true
@@ -105,7 +107,7 @@ jobs:
           {
             attachments: [{
               color: "good",
-              text: "${{ github.workflow }}\n ${{ steps.slack-message.outputs.message }}"
+              text: "${{ github.workflow }}\n${{ steps.slack-message.outputs.message }}\nAction run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             }]
           }
     - uses: slackapi/slack-github-action@v3
@@ -118,6 +120,6 @@ jobs:
           {
             attachments: [{
               color: "danger",
-              text: "${{ github.workflow }} has failed."
+              text: "${{ github.workflow }} has failed.\nAction run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             }]
           }
