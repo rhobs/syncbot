@@ -41,7 +41,7 @@ jobs:
       with:
         repository: openshift/cluster-monitoring-operator
         ref: main
-    - uses: actions/setup-go@v5
+    - uses: actions/setup-go@v6
       with:
         go-version-file: go.mod
     - name: Execute make targets - ${{ inputs.make-targets }}
