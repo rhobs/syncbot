@@ -53,20 +53,20 @@ jobs:
         if ! git diff --name-only | grep -qv 'jsonnetfile.lock.json'; then
           git checkout -- jsonnet/jsonnetfile.lock.json;
         fi
-    - name: get pr creation app token
+    - name: Get app token for pull request creation
       id: pr
-      uses: getsentry/action-github-app-token@v3
+      uses: actions/create-github-app-token@v3
       with:
-        app_id: ${{ secrets.pr-app-id }}
-        private_key: ${{ secrets.pr-app-private-key }}
-        scope: openshift
-    - name: get cloner app token
+        app-id: ${{ secrets.pr-app-id }}
+        private-key: ${{ secrets.pr-app-private-key }}
+        owner: openshift
+    - name: Get app token for repository cloning
       id: cloner
-      uses: getsentry/action-github-app-token@v3
+      uses: actions/create-github-app-token@v3
       with:
-        app_id: ${{ secrets.cloner-app-id }}
-        private_key: ${{ secrets.cloner-app-private-key }}
-        scope: rhobs
+        app-id: ${{ secrets.cloner-app-id }}
+        private-key: ${{ secrets.cloner-app-private-key }}
+        owner: rhobs
     - name: Find branch name
       id: branch
       run: |
