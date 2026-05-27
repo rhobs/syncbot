@@ -86,6 +86,7 @@ jobs:
         token: ${{ steps.pr.outputs.token }}
         push-to-fork: rhobs/cluster-monitoring-operator
         branch-token: ${{ steps.cloner.outputs.token }}
+        maintainer-can-modify: false
     - name: Compose slack message body
       id: slack-message
       run: |
