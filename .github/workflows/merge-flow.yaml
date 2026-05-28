@@ -209,22 +209,22 @@ jobs:
             git add rh-manifest.txt
             git diff --cached --exit-code || git commit -s -m "[bot] update rh-manifest.txt"
           fi
-      - name: Get auth token to create pull request for ${{ inputs.downstream }}
+      - name: Get app token for pull request creation
         if: github.event_name != 'pull_request'
         id: pr
-        uses: getsentry/action-github-app-token@v3
+        uses: actions/create-github-app-token@v3
         with:
-          app_id: ${{ secrets.pr-app-id }}
-          private_key: ${{ secrets.pr-app-private-key }}
-          scope: ${{ steps.org.outputs.downstream }}
-      - name: Get auth token to push to ${{ inputs.sandbox }}
+          app-id: ${{ secrets.pr-app-id }}
+          private-key: ${{ secrets.pr-app-private-key }}
+          owner: ${{ steps.org.outputs.downstream }}
+      - name: Get app token for repository cloning
         if: github.event_name != 'pull_request'
         id: cloner
-        uses: getsentry/action-github-app-token@v3
+        uses: actions/create-github-app-token@v3
         with:
-          app_id: ${{ secrets.cloner-app-id }}
-          private_key: ${{ secrets.cloner-app-private-key }}
-          scope: ${{ steps.org.outputs.sandbox }}
+          app-id: ${{ secrets.cloner-app-id }}
+          private-key: ${{ secrets.cloner-app-private-key }}
+          owner: ${{ steps.org.outputs.sandbox }}
       - name: Create Pull Request
         if: github.event_name != 'pull_request'
         uses: peter-evans/create-pull-request@v8
