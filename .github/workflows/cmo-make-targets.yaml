@@ -14,6 +14,11 @@ on:
         description: List of make targets to be executed sequentially.
         required: true
         type: string
+      pre-run:
+        description: Optional shell commands to run before make targets.
+        required: false
+        default: ''
+        type: string
     secrets:
       cloner-app-id:
         description: Github ID of cloner app
@@ -44,6 +49,9 @@ jobs:
     - uses: actions/setup-go@v6
       with:
         go-version-file: go.mod
+    - name: Pre-run commands
+      if: ${{ inputs.pre-run != '' }}
+      run: ${{ inputs.pre-run }}
     - name: Execute make targets - ${{ inputs.make-targets }}
       run: make ${{ inputs.make-targets }}
     - name: Ignore if change is only in jsonnetfile.lock.json
