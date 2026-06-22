@@ -36,3 +36,75 @@ jobs:
       cloner-app-id: ${{ secrets.CLONER_APP_ID }}
       cloner-app-private-key: ${{ secrets.CLONER_APP_PRIVATE_KEY }}
       slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # Bump the prometheus-operator jsonnet branch pin in CMO so that CRD schemas
+  # and other generated assets stay in sync with the upstream release.
+  check-prometheus-operator-jsonnet-pin:
+    needs: prometheus-operator-merge
+    # Run even if the merge job fails (e.g. due to conflicts). We still need a PR anyway.
+    if: always() && needs.prometheus-operator-merge.outputs.upstream-release != ''
+    runs-on: ubuntu-latest
+    outputs:
+      release-branch: ${{ steps.resolve.outputs.release-branch }}
+      should-update: ${{ steps.resolve.outputs.should-update }}
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        repository: openshift/cluster-monitoring-operator
+        ref: main
+        sparse-checkout: jsonnet/jsonnetfile.json
+    - name: Resolve release branch from upstream tag
+      id: resolve
+      env:
+        UPSTREAM_TAG: ${{ needs.prometheus-operator-merge.outputs.upstream-release }}
+      run: |
+        # v0.92.0 -> release-0.92
+        RELEASE_BRANCH="release-${UPSTREAM_TAG#v}" && RELEASE_BRANCH="${RELEASE_BRANCH%.*}"
+
+        CURRENT=$(jq -r --arg remote "https://github.com/prometheus-operator/prometheus-operator" \
+          '(.dependencies[] | select(.source.git.remote == $remote)).version' \
+          jsonnet/jsonnetfile.json)
+
+        echo "latest: $RELEASE_BRANCH, current: $CURRENT"
+        echo "release-branch=$RELEASE_BRANCH" >> "$GITHUB_OUTPUT"
+
+        if [ "$CURRENT" = "$RELEASE_BRANCH" ]; then
+          echo "should-update=false" >> "$GITHUB_OUTPUT"
+        else
+          echo "should-update=true" >> "$GITHUB_OUTPUT"
+        fi
+
+  bump-prometheus-operator-jsonnet:
+    needs: check-prometheus-operator-jsonnet-pin
+    # Skip if already pinned to the same release branch; another workflow handles updates within the same pin.
+    if: needs.check-prometheus-operator-jsonnet-pin.outputs.should-update == 'true'
+    uses: ./.github/workflows/cmo-make-targets.yaml
+    with:
+      pre-run: |
+        REMOTE="https://github.com/prometheus-operator/prometheus-operator"
+        BRANCH="${{ needs.check-prometheus-operator-jsonnet-pin.outputs.release-branch }}"
+
+        jq --arg remote "$REMOTE" --arg branch "$BRANCH" \
+          '(.dependencies[] | select(.source.git.remote == $remote)).version = $branch' \
+          jsonnet/jsonnetfile.json > jsonnet/jsonnetfile.json.tmp
+
+        mv jsonnet/jsonnetfile.json.tmp jsonnet/jsonnetfile.json
+      make-targets: update COMPONENTS=https://github.com/prometheus-operator/prometheus-operator/jsonnet/prometheus-operator generate
+      pr-title: "[bot] Bump prometheus-operator jsonnet release branch to ${{ needs.check-prometheus-operator-jsonnet-pin.outputs.release-branch }}"
+      pr-body: |
+        ## Description
+        Updates the prometheus-operator jsonnet branch pin in
+        [`jsonnet/jsonnetfile.json`](https://github.com/openshift/cluster-monitoring-operator/blob/main/jsonnet/jsonnetfile.json)
+        to match the latest upstream release, and regenerates all
+        assets (CRDs YAMLs, etc.).
+
+        Note: the [downstream openshift/prometheus-operator](https://github.com/openshift/prometheus-operator/blob/main/VERSION)
+        may still be on an older version.
+        That is not necessarily a blocker; in fact, landing this PR
+        first may unblock the downstream fork bump.
+    secrets:
+      pr-app-id: ${{ secrets.APP_ID }}
+      pr-app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
+      cloner-app-id: ${{ secrets.CLONER_APP_ID }}
+      cloner-app-private-key: ${{ secrets.CLONER_APP_PRIVATE_KEY }}
+      slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}

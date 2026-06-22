@@ -60,11 +60,17 @@ on:
       slack-webhook-url:
         description: Slack webhook URL to send notification
         required: true
+    outputs:
+      upstream-release:
+        description: The latest upstream release tag (e.g. "v0.92.0")
+        value: ${{ jobs.merge.outputs.upstream-release }}
 
 jobs:
   merge:
     runs-on: ubuntu-latest
     name: Perform merge operation
+    outputs:
+      upstream-release: ${{ steps.upstream.outputs.release }}
     steps:
       - name: Get latest upstream tag
         id: upstream
