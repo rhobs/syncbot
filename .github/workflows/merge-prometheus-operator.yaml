@@ -41,7 +41,7 @@ jobs:
   # and other generated assets stay in sync with the upstream release.
   check-prometheus-operator-jsonnet-pin:
     needs: prometheus-operator-merge
-    # Run even if the merge job fails (e.g. due to conflicts).
+    # Run even if the merge job fails (e.g. due to conflicts). We still need a PR anyway.
     if: always() && needs.prometheus-operator-merge.outputs.upstream-release != ''
     runs-on: ubuntu-latest
     outputs:
@@ -96,11 +96,12 @@ jobs:
         Updates the prometheus-operator jsonnet branch pin in
         [`jsonnet/jsonnetfile.json`](https://github.com/openshift/cluster-monitoring-operator/blob/main/jsonnet/jsonnetfile.json)
         to match the latest upstream release, and regenerates all
-        assets including prometheus-operator CRDs YAMLs.
+        assets (CRDs YAMLs, etc.).
 
         Note: the [downstream openshift/prometheus-operator](https://github.com/openshift/prometheus-operator/blob/main/VERSION)
         may still be on an older version.
-        That is not necessarily a blocker for this PR.
+        That is not necessarily a blocker; in fact, landing this PR
+        first may unblock the downstream fork bump.
     secrets:
       pr-app-id: ${{ secrets.APP_ID }}
       pr-app-private-key: ${{ secrets.APP_PRIVATE_KEY }}

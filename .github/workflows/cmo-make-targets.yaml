@@ -62,6 +62,7 @@ jobs:
           git checkout -- jsonnet/jsonnetfile.lock.json;
         fi
     - name: Get app token for pull request creation
+      if: github.event_name != 'pull_request'
       id: pr
       uses: actions/create-github-app-token@v3
       with:
@@ -69,6 +70,7 @@ jobs:
         private-key: ${{ secrets.pr-app-private-key }}
         owner: openshift
     - name: Get app token for repository cloning
+      if: github.event_name != 'pull_request'
       id: cloner
       uses: actions/create-github-app-token@v3
       with:
@@ -80,6 +82,7 @@ jobs:
       run: |
         echo sandbox="$(echo ${{ inputs.make-targets }} | sed 's/ /-/g')" >> "$GITHUB_OUTPUT"
     - name: Create Pull Request
+      if: github.event_name != 'pull_request'
       id: create-pr
       uses: peter-evans/create-pull-request@v8
       with:
@@ -96,6 +99,7 @@ jobs:
         branch-token: ${{ steps.cloner.outputs.token }}
         maintainer-can-modify: false
     - name: Compose slack message body
+      if: github.event_name != 'pull_request' && success()
       id: slack-message
       run: |
         if [ "${{ steps.create-pr.outputs.pull-request-url }}" == "" ]; then
@@ -107,7 +111,7 @@ jobs:
         fi
     - uses: slackapi/slack-github-action@v3
       continue-on-error: true
-      if: success()
+      if: github.event_name != 'pull_request' && success()
       with:
         webhook: ${{ secrets.slack-webhook-url }}
         webhook-type: incoming-webhook
@@ -120,7 +124,7 @@ jobs:
           }
     - uses: slackapi/slack-github-action@v3
       continue-on-error: true
-      if: failure()
+      if: github.event_name != 'pull_request' && failure()
       with:
         webhook: ${{ secrets.slack-webhook-url }}
         webhook-type: incoming-webhook
