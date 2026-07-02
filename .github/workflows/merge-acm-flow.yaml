@@ -133,6 +133,7 @@ jobs:
           repository: ${{ inputs.downstream }}
           fetch-depth: 0
           ref: ${{ inputs.downstream-branch }}
+          persist-credentials: false
       - name: Fetch upstream tag
         run: |
           git config user.name 'github-actions[bot]'
