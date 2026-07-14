@@ -20,18 +20,18 @@ jobs:
       upstream: kubernetes-sigs/metrics-server
       downstream: openshift/kubernetes-metrics-server
       sandbox: rhobs/kubernetes-metrics-server
-      restore-downstream: >-
-        OWNERS
-        charts/OWNERS
+      restore-downstream: OWNERS
       restore-upstream: >-
         go.mod
         go.sum
         Dockerfile
         Makefile
-        scripts/go.mod
-        scripts/go.sum
         README.md
         manifests/components/release/kustomization.yaml
+      remove-paths: >-
+        charts
+        .github/workflows/lint-test-chart.yaml
+        .github/workflows/release-chart.yaml
       downstream-version-expression: |
         sed -n -E 's/^.*newTag: *(v[0-9]+\.[0-9]+\.[0-9]+).*$/\1/p' https://raw.githubusercontent.com/openshift/kubernetes-metrics-server/main/manifests/components/release/kustomization.yaml
     secrets:

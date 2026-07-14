@@ -39,6 +39,11 @@ on:
         required: false
         default: ''
         type: string
+      remove-paths:
+        description: List of paths to remove from the downstream fork after merge.
+        required: false
+        default: ''
+        type: string
       downstream-version-expression:
         description: Expression to extract downstream version from downstream repo. Follows the https://www.npmjs.com/package/semver spec.
         required: false
@@ -150,10 +155,22 @@ jobs:
             echo "reset ${{ inputs.restore-downstream }}"
             git checkout --ours ${{ inputs.restore-downstream }}
             git add ${{ inputs.restore-downstream }}
+      - name: Resolve conflict due to deleted upstream files
+        if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' }}
+        run: |
+            # Accept upstream deletions after restore-downstream has preserved downstream-only files.
+            git status --porcelain | awk '{ if ($1=="UD") print $2 }' | xargs -r git rm
       - name: Resolve conflict due to deleted downstream files
         if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' }}
         run: |
             git status --porcelain | awk '{ if ($1=="DU") print $2 }' | xargs -I {} git rm {}
+      - name: Remove unwanted paths
+        if: inputs.remove-paths != ''
+        run: |
+            git rm -rf --ignore-unmatch ${{ inputs.remove-paths }}
+            if [ "${{ steps.merge.outputs.MERGE_CONFLICT }}" != "true" ]; then
+              git diff --cached --exit-code || git commit -s -m "[bot] remove unwanted paths"
+            fi
       - name: Continue after merge conflict
         if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' }}
         run: |
