@@ -150,6 +150,11 @@ jobs:
             echo "reset ${{ inputs.restore-downstream }}"
             git checkout --ours ${{ inputs.restore-downstream }}
             git add ${{ inputs.restore-downstream }}
+      - name: Resolve conflict due to deleted upstream files
+        if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' }}
+        run: |
+            # Accept upstream deletions after restore-downstream has preserved downstream-only files.
+            git status --porcelain | awk '{ if ($1=="UD") print $2 }' | xargs -r git rm
       - name: Resolve conflict due to deleted downstream files
         if: ${{ steps.merge.outputs.MERGE_CONFLICT == 'true' }}
         run: |
