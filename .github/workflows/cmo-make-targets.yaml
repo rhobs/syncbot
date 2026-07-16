@@ -97,7 +97,7 @@ jobs:
         else
           echo "message=PR ${{ steps.create-pr.outputs.pull-request-url }} has been ${{ steps.create-pr.outputs.pull-request-operation }}." >> "$GITHUB_OUTPUT"
         fi
-    - uses: slackapi/slack-github-action@v3
+    - uses: slackapi/slack-github-action@v4
       continue-on-error: true
       if: success()
       with:
@@ -110,7 +110,7 @@ jobs:
               text: "${{ github.workflow }}\n${{ steps.slack-message.outputs.message }}\nAction run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             }]
           }
-    - uses: slackapi/slack-github-action@v3
+    - uses: slackapi/slack-github-action@v4
       continue-on-error: true
       if: failure()
       with:

@@ -276,7 +276,7 @@ jobs:
           else
             echo "message=PR ${{ steps.create-pr.outputs.pull-request-url }} has been ${{ steps.create-pr.outputs.pull-request-operation }}." >> $GITHUB_OUTPUT
           fi
-      - uses: slackapi/slack-github-action@v3
+      - uses: slackapi/slack-github-action@v4
         if: github.event_name != 'pull_request' && (success() || steps.fork-sync.outputs.status == 'uptodate' || steps.fork-sync.outputs.status == 'ahead')
         continue-on-error: true
         with:
@@ -289,7 +289,7 @@ jobs:
                 text: "${{ github.workflow }}\n${{ steps.slack-message.outputs.message }}\nAction run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
               }]
             }
-      - uses: slackapi/slack-github-action@v3
+      - uses: slackapi/slack-github-action@v4
         if: github.event_name != 'pull_request' && (failure() && steps.fork-sync.outputs.status != 'uptodate' && steps.fork-sync.outputs.status != 'ahead')
         continue-on-error: true
         with:
