@@ -20,9 +20,6 @@ jobs:
       downstream: stolostron/prometheus
       sandbox: rhobs/acm-prometheus
       go-mod-tidy: false
-      restore-downstream: >-
-        plugins.yml
-        plugins
       restore-upstream: >-
         CHANGELOG.md
         Makefile
