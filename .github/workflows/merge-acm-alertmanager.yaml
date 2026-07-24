@@ -37,7 +37,7 @@ jobs:
         if ! git diff --exit-code origin/main ui/app; then
           git rm -rf --ignore-unmatch ui/app/dist
           make --always-make ui-elm
-          git add ui/app/dist
+          git add -f ui/app/dist
           git diff --cached --exit-code || git commit -s -m "[bot] assets: generate"
         fi
       node-version: "24"
