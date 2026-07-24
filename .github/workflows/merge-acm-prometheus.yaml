@@ -20,9 +20,6 @@ jobs:
       downstream: stolostron/prometheus
       sandbox: rhobs/acm-prometheus
       go-mod-tidy: false
-      restore-downstream: >-
-        plugins.yml
-        plugins
       restore-upstream: >-
         CHANGELOG.md
         Makefile
@@ -34,10 +31,12 @@ jobs:
         # Only compress assets if assets actually changed
         # The git diff relies on gits remote naming. The merge-flow checks out
         # $downstream as origin at the time of writing this code.
-        if ! git diff --exit-code --name-only  origin/main web/ui; then
-          find web/ui/static -type f -name '*.gz' -exec git add {} \;
-          git add web/ui
-          git diff --cached --exit-code --name-only || git commit -s -m "[bot] assets: generate"
+        if ! git diff --exit-code origin/main web/ui; then
+          # Only build the Mantine UI.
+          BUILD_UI=mantine make assets-compress
+          find web/ui/static/mantine-ui -type f -name '*.gz' -exec git add {} \;
+          git add web/ui/embed.go
+          git diff --cached --exit-code || git commit -s -m "[bot] assets: generate"
         fi
 
     secrets:
