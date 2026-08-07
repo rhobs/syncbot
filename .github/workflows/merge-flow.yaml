@@ -105,7 +105,7 @@ jobs:
             fi
           fi
           echo "downstream-version=${DOWNSTREAM_VERSION}" >> $GITHUB_OUTPUT
-      - uses: madhead/semver-utils@latest
+      - uses: madhead/semver-utils@4cf918affe9106ea59f86c6250e5ec4570ac4389 # latest
         id: version
         with:
           version: ${{ steps.org.outputs.downstream-version }}
@@ -128,7 +128,7 @@ jobs:
             echo "::notice::downstream ahead"
             exit 0
           fi
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: ${{ inputs.downstream }}
           fetch-depth: 0
@@ -195,11 +195,11 @@ jobs:
           echo "$version_from_tag" > VERSION
           git add VERSION
           git diff --cached --exit-code || git commit -s -m "[bot] add VERSION file with ${version_from_tag}"
-      - uses: actions/setup-go@v7
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
           go-version-file: go.mod
       # Install NodeJS + pnpm to build frontend assets.
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: ${{ inputs.node-version }}
       - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
@@ -236,7 +236,7 @@ jobs:
       - name: Get app token for pull request creation
         if: github.event_name != 'pull_request'
         id: pr
-        uses: actions/create-github-app-token@v3
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
         with:
           app-id: ${{ secrets.pr-app-id }}
           private-key: ${{ secrets.pr-app-private-key }}
@@ -244,14 +244,14 @@ jobs:
       - name: Get app token for repository cloning
         if: github.event_name != 'pull_request'
         id: cloner
-        uses: actions/create-github-app-token@v3
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
         with:
           app-id: ${{ secrets.cloner-app-id }}
           private-key: ${{ secrets.cloner-app-private-key }}
           owner: ${{ steps.org.outputs.sandbox }}
       - name: Create Pull Request
         if: github.event_name != 'pull_request'
-        uses: peter-evans/create-pull-request@v8
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8
         id: create-pr
         with:
           title: "[bot] Bump ${{ inputs.downstream }} to ${{ steps.upstream.outputs.release }}"
@@ -280,7 +280,7 @@ jobs:
           else
             echo "message=PR ${{ steps.create-pr.outputs.pull-request-url }} has been ${{ steps.create-pr.outputs.pull-request-operation }}." >> $GITHUB_OUTPUT
           fi
-      - uses: slackapi/slack-github-action@v4
+      - uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4
         if: github.event_name != 'pull_request' && (success() || steps.fork-sync.outputs.status == 'uptodate' || steps.fork-sync.outputs.status == 'ahead')
         continue-on-error: true
         with:
@@ -293,7 +293,7 @@ jobs:
                 text: "${{ github.workflow }}\n${{ steps.slack-message.outputs.message }}\nAction run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
               }]
             }
-      - uses: slackapi/slack-github-action@v4
+      - uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4
         if: github.event_name != 'pull_request' && (failure() && steps.fork-sync.outputs.status != 'uptodate' && steps.fork-sync.outputs.status != 'ahead')
         continue-on-error: true
         with:
