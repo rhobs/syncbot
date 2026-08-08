@@ -20,10 +20,21 @@ jobs:
       upstream: kubernetes-sigs/resource-state-metrics
       downstream: openshift/kubernetes-sigs-resource-state-metrics
       sandbox: rhobs/kubernetes-sigs-resource-state-metrics
-      restore-downstream: OWNERS
+      restore-downstream: >-
+        OWNERS
+        AGENTS.md
+        CLAUDE.md
+        CONTRIBUTING.md
+        REDHAT.md
+        docs/agentic-sdlc.md
+        docs/principles.md
+        internal/AGENTS.md
+        pkg/apis/AGENTS.md
+        pkg/resolver/AGENTS.md
+        skills/
+        tests/golden/AGENTS.md
       restore-upstream: >-
         .github/
-        CONTRIBUTING.md
         Dockerfile
         README.md
         VERSION
