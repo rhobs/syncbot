@@ -1,0 +1,262 @@
+name: Common logging sync main flow
+on:
+  workflow_call:
+    inputs:
+      upstream:
+        description: Upstream repo path in owner/repo format
+        required: true
+        type: string
+      downstream:
+        description: Downstream repo path in owner/repo format
+        required: true
+        type: string
+      downstream-branch:
+        description: Downstream branch to sync into
+        required: false
+        default: main
+        type: string
+      sandbox:
+        description: Sandbox repo path in owner/repo format. Used as a base to create PR against downstream.
+        required: true
+        type: string
+      commit-filter:
+        description: Grep pattern to filter incoming commits. When set, a PR is only created if matching commits exist. When empty, always syncs.
+        required: false
+        default: ''
+        type: string
+      restore-upstream:
+        description: List of files to be reset using upstream content on merge conflict.
+        required: false
+        default: ''
+        type: string
+      restore-downstream:
+        description: List of files to be reset using downstream content on merge conflict.
+        required: false
+        default: ''
+        type: string
+    secrets:
+      cloner-app-id:
+        description: Github ID of cloner app
+        required: true
+      cloner-app-private-key:
+        description: Github private key of cloner app
+        required: true
+      pr-app-id:
+        description: Github ID of PR creation app
+        required: true
+      pr-app-private-key:
+        description: Github private key of PR creation app
+        required: true
+      slack-webhook-url:
+        description: Slack webhook URL to send notification
+        required: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    name: Sync main branch
+    steps:
+      - name: Find github org name from repo name
+        id: org
+        run: |
+          {
+          echo "upstream=$(dirname ${{ inputs.upstream }})"
+          echo "downstream=$(dirname ${{ inputs.downstream }})"
+          echo "sandbox=$(dirname ${{ inputs.sandbox }})"
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v6
+        with:
+          repository: ${{ inputs.downstream }}
+          fetch-depth: 0
+          ref: ${{ inputs.downstream-branch }}
+
+      - name: Configure git
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - name: Fetch upstream ${{ inputs.downstream-branch }}
+        run: git fetch https://github.com/${{ inputs.upstream }} ${{ inputs.downstream-branch }}
+
+      - name: Check if behind upstream
+        id: check
+        run: |
+          BEHIND=$(git rev-list --count HEAD..FETCH_HEAD)
+          echo "behind=${BEHIND}" >> "$GITHUB_OUTPUT"
+          if [ "${BEHIND}" -eq 0 ]; then
+            echo "::notice::Already up-to-date with upstream"
+          else
+            echo "::notice::${BEHIND} commits behind upstream"
+          fi
+
+      - name: Filter incoming commits
+        if: steps.check.outputs.behind != '0'
+        id: filter
+        run: |
+          if [ -n "${{ inputs.commit-filter }}" ]; then
+            COMMITS=$(git log --oneline HEAD..FETCH_HEAD --grep='${{ inputs.commit-filter }}' --extended-regexp)
+            if [ -z "$COMMITS" ]; then
+              echo "has_matches=false" >> "$GITHUB_OUTPUT"
+              echo "::notice::No commits matching filter '${{ inputs.commit-filter }}' — skipping PR"
+              exit 0
+            fi
+            echo "has_matches=true" >> "$GITHUB_OUTPUT"
+            {
+              echo 'commits<<EOF'
+              echo "$COMMITS"
+              echo 'EOF'
+            } >> "$GITHUB_OUTPUT"
+          else
+            echo "has_matches=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Merge upstream ${{ inputs.downstream-branch }}
+        if: steps.check.outputs.behind != '0' && steps.filter.outputs.has_matches == 'true'
+        id: merge
+        run: |
+          git merge FETCH_HEAD --no-edit || echo 'MERGE_CONFLICT=true' >> "$GITHUB_OUTPUT"
+
+      - name: Resolve conflict using upstream contents
+        if: steps.merge.outputs.MERGE_CONFLICT == 'true' && inputs.restore-upstream != ''
+        run: |
+          echo "reset ${{ inputs.restore-upstream }}"
+          git checkout --theirs ${{ inputs.restore-upstream }} || true
+          git add ${{ inputs.restore-upstream }} || true
+
+      - name: Remove deleted files
+        if: steps.merge.outputs.MERGE_CONFLICT == 'true'
+        run: |
+          git diff --name-only --diff-filter=D | xargs -r git rm
+
+      - name: Resolve conflict using downstream contents
+        if: steps.merge.outputs.MERGE_CONFLICT == 'true' && inputs.restore-downstream != ''
+        run: |
+          echo "reset ${{ inputs.restore-downstream }}"
+          git checkout --ours ${{ inputs.restore-downstream }}
+          git add ${{ inputs.restore-downstream }}
+
+      - name: Resolve conflict due to deleted downstream files
+        if: steps.merge.outputs.MERGE_CONFLICT == 'true'
+        run: |
+          git status --porcelain | awk '{ if ($1=="UD" || $1=="DU") print $2 }' | xargs -I {} git rm {}
+
+      - name: Continue after merge conflict
+        if: steps.merge.outputs.MERGE_CONFLICT == 'true'
+        run: |
+          git add -A
+          git merge --continue
+
+      - name: Resolve caller workflow file
+        id: caller
+        run: |
+          WORKFLOW_PATH=$(echo "${{ github.workflow_ref }}" | sed 's|${{ github.repository }}/||' | sed 's|@.*||')
+          echo "url=${{ github.server_url }}/${{ github.repository }}/blob/main/${WORKFLOW_PATH}" >> "$GITHUB_OUTPUT"
+
+      - name: Get auth token to create pull request for ${{ inputs.downstream }}
+        if: github.event_name != 'pull_request' && steps.check.outputs.behind != '0' && steps.filter.outputs.has_matches == 'true'
+        id: pr
+        uses: getsentry/action-github-app-token@v3
+        with:
+          app_id: ${{ secrets.pr-app-id }}
+          private_key: ${{ secrets.pr-app-private-key }}
+          scope: ${{ steps.org.outputs.downstream }}
+
+      - name: Get auth token to push to ${{ inputs.sandbox }}
+        if: github.event_name != 'pull_request' && steps.check.outputs.behind != '0' && steps.filter.outputs.has_matches == 'true'
+        id: cloner
+        uses: getsentry/action-github-app-token@v3
+        with:
+          app_id: ${{ secrets.cloner-app-id }}
+          private_key: ${{ secrets.cloner-app-private-key }}
+          scope: ${{ steps.org.outputs.sandbox }}
+
+      - name: Create Pull Request
+        if: github.event_name != 'pull_request' && steps.check.outputs.behind != '0' && steps.filter.outputs.has_matches == 'true'
+        uses: rhobs/create-pull-request@v4
+        id: create-pr
+        with:
+          title: "[Logging Sync Bot] Sync ${{ inputs.downstream }} with ${{ inputs.upstream }} main"
+          body: |
+            ## Description
+            Automated sync of `${{ inputs.upstream }}` main into `${{ inputs.downstream }}` ${{ inputs.downstream-branch }}.
+
+            Created by [syncbot](${{ steps.caller.outputs.url }}) — [run logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
+
+            ${{ inputs.commit-filter != '' && format('## Commits matching `{0}`', inputs.commit-filter) || '' }}
+            ${{ steps.filter.outputs.commits || '' }}
+          author: 'github-actions[bot]<github-actions[bot]@users.noreply.github.com>'
+          committer: 'github-actions[bot]<github-actions[bot]@users.noreply.github.com>'
+          signoff: true
+          branch: automated-sync-main-${{ inputs.downstream-branch }}
+          delete-branch: true
+          token: ${{ steps.pr.outputs.token }}
+          push-to-fork: ${{ inputs.sandbox }}
+          push-to-fork-token: ${{ steps.cloner.outputs.token }}
+
+      - name: Check if PR exists using gh cli
+        if: github.event_name != 'pull_request' && failure()
+        id: pr-exists
+        env:
+          GH_TOKEN: ${{ steps.pr.outputs.token }}
+        run: |
+          if [ "${{ steps.create-pr.outcome }}" != "success" ]; then
+            PR_URL=$(gh pr list --json url --jq '.[0].url' --repo ${{ inputs.downstream }} --state open --head automated-sync-main-${{ inputs.downstream-branch }})
+            if [ ! -z "$PR_URL" ]; then
+              echo "pr_exists=1" >> "$GITHUB_OUTPUT"
+              echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
+              echo "PR exists >> $PR_URL"
+            else
+              echo "pr_exists=0" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+
+      - name: Compose slack message body
+        if: github.event_name != 'pull_request' && (success() || steps.check.outputs.behind == '0' || steps.filter.outputs.has_matches == 'false' || steps.pr-exists.outputs.pr_exists == '1')
+        continue-on-error: true
+        id: slack-message
+        run: |
+          if [ "${{ steps.pr-exists.outputs.pr_exists }}" == "1" ]; then
+            PR_URL="${{ steps.pr-exists.outputs.pr_url }}"
+          else
+            PR_URL="${{ steps.create-pr.outputs.pull-request-url }}"
+          fi
+          if [ "${{ steps.check.outputs.behind }}" == "0" ]; then
+            echo "message=${{ inputs.downstream }} is already up-to-date with ${{ inputs.upstream }} main." >> "$GITHUB_OUTPUT"
+          elif [ "${{ steps.filter.outputs.has_matches }}" == "false" ]; then
+            echo "message=${{ inputs.downstream }} has no commits matching filter '${{ inputs.commit-filter }}' — skipped." >> "$GITHUB_OUTPUT"
+          else
+            echo "message=PR $PR_URL has been ${{ steps.create-pr.outputs.pull-request-operation || 'updated' }}." >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: 8398a7/action-slack@v3
+        if: github.event_name != 'pull_request' && (success() || steps.check.outputs.behind == '0' || steps.filter.outputs.has_matches == 'false' || steps.pr-exists.outputs.pr_exists == '1')
+        continue-on-error: true
+        with:
+          status: custom
+          fields: workflow
+          custom_payload: |
+            {
+              attachments: [{
+                color: 'good',
+                text: `${process.env.AS_WORKFLOW}\n ${{ steps.slack-message.outputs.message }}`,
+              }]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.slack-webhook-url }}
+
+      - uses: 8398a7/action-slack@v3
+        if: github.event_name != 'pull_request' && (failure() && steps.check.outputs.behind != '0' && steps.filter.outputs.has_matches != 'false' && !(steps.pr-exists.outputs.pr_exists == '1'))
+        continue-on-error: true
+        with:
+          status: custom
+          fields: workflow
+          custom_payload: |
+            {
+              attachments: [{
+                color: 'danger',
+                text: `${process.env.AS_WORKFLOW} has failed.`,
+              }]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.slack-webhook-url }}
