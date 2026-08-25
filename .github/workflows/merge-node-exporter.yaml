@@ -20,6 +20,8 @@ jobs:
       downstream: openshift/node_exporter
       sandbox: rhobs/node_exporter
       restore-downstream: >-
+         .ci-operator.yaml
+         Dockerfile.ocp
          OWNERS
       restore-upstream: >-
          CHANGELOG.md
@@ -27,7 +29,6 @@ jobs:
          collector
          go.mod
          go.sum
-         .github/workflows/
     secrets:
       pr-app-id: ${{ secrets.APP_ID }}
       pr-app-private-key: ${{ secrets.APP_PRIVATE_KEY }}

@@ -20,7 +20,10 @@ jobs:
       upstream: kubernetes-sigs/metrics-server
       downstream: openshift/kubernetes-metrics-server
       sandbox: rhobs/kubernetes-metrics-server
-      restore-downstream: OWNERS
+      restore-downstream: >-
+        .ci-operator.yaml
+        Dockerfile.ocp
+        OWNERS
       restore-upstream: >-
         go.mod
         go.sum

@@ -20,9 +20,11 @@ jobs:
       upstream: kubernetes-sigs/resource-state-metrics
       downstream: openshift/kubernetes-sigs-resource-state-metrics
       sandbox: rhobs/kubernetes-sigs-resource-state-metrics
-      restore-downstream: OWNERS
+      restore-downstream: >-
+        .ci-operator.yaml
+        Dockerfile.ocp
+        OWNERS
       restore-upstream: >-
-        .github/
         CONTRIBUTING.md
         Dockerfile
         README.md

@@ -20,6 +20,8 @@ jobs:
       downstream: openshift/prom-label-proxy
       sandbox: rhobs/prom-label-proxy
       restore-downstream: >-
+         .ci-operator.yaml
+         Dockerfile.ocp
          OWNERS
       restore-upstream: >-
          CHANGELOG.md

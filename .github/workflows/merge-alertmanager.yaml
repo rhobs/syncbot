@@ -28,6 +28,9 @@ jobs:
          go.sum
          docs/
       restore-downstream: >-
+         .ci-operator.yaml
+         Dockerfile.ocp
+         OWNERS
          .coderabbit.yaml
          .gitignore
       assets-cmd: |

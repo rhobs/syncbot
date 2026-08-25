@@ -20,7 +20,10 @@ jobs:
       downstream: openshift/prometheus
       sandbox: rhobs/prometheus
       restore-downstream: >-
+        .ci-operator.yaml
         .github/PULL_REQUEST_TEMPLATE.md
+        Dockerfile.ocp
+        OWNERS
       restore-upstream: >-
         CHANGELOG.md
         VERSION

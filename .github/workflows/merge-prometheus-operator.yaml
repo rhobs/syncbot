@@ -30,6 +30,12 @@ jobs:
         scripts/go.mod
         scripts/go.sum
         pkg
+      restore-downstream: >-
+        .ci-operator.yaml
+        Dockerfile.ocp
+        Dockerfile.admission-webhook.ocp
+        Dockerfile.config-reloader.ocp
+        OWNERS
     secrets:
       pr-app-id: ${{ secrets.APP_ID }}
       pr-app-private-key: ${{ secrets.APP_PRIVATE_KEY }}

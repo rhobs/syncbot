@@ -21,7 +21,6 @@ jobs:
       downstream: openshift/kube-state-metrics
       sandbox: rhobs/kube-state-metrics
       restore-upstream: >-
-        .github/ 
         .markdownlint-cli2.jsonc
         CHANGELOG.md
         CONTRIBUTING.md
@@ -30,7 +29,10 @@ jobs:
         VERSION
         docs/
         go.mod
-      restore-downstream: OWNERS
+      restore-downstream: >-
+        .ci-operator.yaml
+        Dockerfile.ocp
+        OWNERS
       downstream-version-expression: |
         sed -n -E 's/^version: \"*([0-9]+\.[0-9]+\.[0-9]+)\"$/v\1/p' https://raw.githubusercontent.com/openshift/kube-state-metrics/main/data.yaml
     secrets:

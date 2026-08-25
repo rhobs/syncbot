@@ -29,6 +29,10 @@ jobs:
         tutorials
         .busybox-versions
         .devcontainer
+      restore-downstream: >-
+        .ci-operator.yaml
+        Dockerfile.ocp
+        OWNERS
     secrets:
       pr-app-id: ${{ secrets.APP_ID }}
       pr-app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
