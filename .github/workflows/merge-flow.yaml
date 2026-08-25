@@ -197,7 +197,11 @@ jobs:
           git diff --cached --exit-code || git commit -s -m "[bot] add VERSION file with ${version_from_tag}"
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
-          go-version-file: go.mod
+          # Don't pin to go.mod: deps may require a newer Go
+          # patch, and upstream CI may already be running it, hiding
+          # errors like "module X requires go >= 1.25.10 (running go 1.25.8)".
+          # Use stable and let downstream repos' CIs decide whether they are ready.
+          go-version: stable
       # Install NodeJS + pnpm to build frontend assets.
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
