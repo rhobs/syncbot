@@ -209,12 +209,12 @@ jobs:
       - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
         with:
           version: "> 11.12.0"
-      - name: Remove dependabot configuration
+      # Upstream CI and bot configs are unused downstream and trigger
+      # security/dependabot alerts if left in place.
+      - name: Remove unused upstream configs
         run: |
-          if [ -f .github/dependabot.yml ]; then
-            git rm -f .github/dependabot.yml
-            git commit -s -m "[bot] remove dependabot config"
-          fi
+          git rm -rf --ignore-unmatch .github/workflows .github/dependabot.yml
+          git diff --cached --exit-code || git commit -s -m "[bot] remove unused upstream configs"
       - name: go mod tidy + vendor
         run: |
           go mod tidy
