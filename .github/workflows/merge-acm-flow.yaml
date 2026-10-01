@@ -44,6 +44,11 @@ on:
         required: false
         default: ''
         type: string
+      upstream-version-prefix:
+        description: Pin upstream to a specific version line (e.g. "v13.1."). If empty, uses the latest release.
+        required: false
+        default: ''
+        type: string
       go-mod-tidy:
         description: Run `go mod tidy` after a merge
         required: false
@@ -74,8 +79,12 @@ jobs:
       - name: Get latest upstream tag
         id: upstream
         run: |
-          UPSTREAM_VERSION=$(curl --fail --silent "https://api.github.com/repos/${{ inputs.upstream }}/releases/latest" | jq -r '.tag_name')
-          if [ "$UPSTREAM_VERSION" == "" ]; then
+          if [ -z "${{ inputs.upstream-version-prefix }}" ]; then
+            UPSTREAM_VERSION=$(curl --fail --silent "https://api.github.com/repos/${{ inputs.upstream }}/releases/latest" | jq -r '.tag_name')
+          else
+            UPSTREAM_VERSION=$(curl --fail --silent "https://api.github.com/repos/${{ inputs.upstream }}/releases?per_page=100" | jq -r --arg prefix "${{ inputs.upstream-version-prefix }}" '[.[] | select(.tag_name | startswith($prefix)) | select(.prerelease == false) | select(.draft == false)] | sort_by(.published_at) | last | .tag_name')
+          fi
+          if [ "$UPSTREAM_VERSION" == "" ] || [ "$UPSTREAM_VERSION" == "null" ]; then
               echo "upstream-version is invalid" >> "$GITHUB_OUTPUT"
               exit 1
           fi

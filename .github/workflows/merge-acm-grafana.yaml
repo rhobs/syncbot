@@ -17,6 +17,7 @@ jobs:
     uses: ./.github/workflows/merge-acm-flow.yaml
     with:
       upstream: grafana/grafana
+      upstream-version-prefix: "v13.1."
       downstream: stolostron/grafana
       sandbox: rhobs/acm-grafana
       node-version: "22"
