@@ -30,6 +30,10 @@ jobs:
         go.mod
         go.sum
         .golangci.yml
+        web/ui/mantine-ui/package.json
+        web/ui/module/codemirror-promql/package.json
+        web/ui/module/lezer-promql/package.json
+        web/ui/package.json
       assets-cmd: |
         # Only compress assets if assets actually changed
         # The git diff relies on gits remote naming. The merge-flow checks out
