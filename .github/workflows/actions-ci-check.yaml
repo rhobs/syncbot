@@ -8,5 +8,9 @@ jobs:
       - uses: reviewdog/action-actionlint@v1
         with:
           fail_level: "any"
+          # Only fail on issues introduced by the PR, not pre-existing ones in
+          # files the PR happens to touch (e.g. the deprecated app-id input that
+          # all the merge workflows still use).
+          filter_mode: added
           # Disable shellcheck tool because it's too nit-picky with inlined Bash commands.
           actionlint_flags: '-shellcheck=""'
