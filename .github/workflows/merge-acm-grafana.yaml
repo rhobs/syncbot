@@ -28,6 +28,7 @@ jobs:
       sandbox: rhobs/acm-grafana
       node-version: "22"
       go-mod-tidy: false
+      go-workspace-sync: true
       restore-downstream: >-
         OWNERS
       restore-upstream: >-

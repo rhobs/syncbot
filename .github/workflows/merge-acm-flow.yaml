@@ -59,6 +59,11 @@ on:
         required: false
         default: true
         type: boolean
+      go-workspace-sync:
+        description: Run `go work sync`, `go work vendor`, and `go mod tidy` after a merge
+        required: false
+        default: false
+        type: boolean
     secrets:
       cloner-app-id:
         description: Github ID of cloner app
@@ -230,6 +235,16 @@ jobs:
           go mod tidy
           git add go.mod go.sum 
           git diff --cached --exit-code || git commit -s -m "[bot]go mod tidy"
+      - name: Sync Go workspace
+        if: ${{ inputs.go-workspace-sync }}
+        run: |
+          go work sync
+          go work vendor
+          go mod tidy
+          git add -u -- ':(glob)**/go.mod' ':(glob)**/go.sum' go.work go.work.sum
+          if ! git diff --cached --quiet; then
+            git commit -s -m "[bot] sync Go workspace"
+          fi
       - name: Generate assets
         if: ${{ inputs.assets-cmd != '' }}
         run: ${{ inputs.assets-cmd }}
