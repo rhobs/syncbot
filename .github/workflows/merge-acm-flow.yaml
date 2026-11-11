@@ -49,6 +49,11 @@ on:
         required: false
         default: ''
         type: string
+      upstream-version:
+        description: Exact upstream vX.Y.Z tag to merge. If empty, selects the latest release.
+        required: false
+        default: ''
+        type: string
       go-mod-tidy:
         description: Run `go mod tidy` after a merge
         required: false
@@ -76,13 +81,26 @@ jobs:
     runs-on: ubuntu-latest
     name: Perform merge operation
     steps:
-      - name: Get latest upstream tag
+      - name: Get upstream tag
         id: upstream
+        env:
+          UPSTREAM_VERSION_OVERRIDE: ${{ inputs.upstream-version }}
+          UPSTREAM_VERSION_PREFIX: ${{ inputs.upstream-version-prefix }}
         run: |
-          if [ -z "${{ inputs.upstream-version-prefix }}" ]; then
+          if [ -n "$UPSTREAM_VERSION_OVERRIDE" ]; then
+            if ! [[ "$UPSTREAM_VERSION_OVERRIDE" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "::error::upstream-version must be a vX.Y.Z tag"
+              exit 1
+            fi
+            if [ -n "$UPSTREAM_VERSION_PREFIX" ] && [[ "$UPSTREAM_VERSION_OVERRIDE" != "$UPSTREAM_VERSION_PREFIX"* ]]; then
+              echo "::error::upstream-version must start with $UPSTREAM_VERSION_PREFIX"
+              exit 1
+            fi
+            UPSTREAM_VERSION="$UPSTREAM_VERSION_OVERRIDE"
+          elif [ -z "$UPSTREAM_VERSION_PREFIX" ]; then
             UPSTREAM_VERSION=$(curl --fail --silent "https://api.github.com/repos/${{ inputs.upstream }}/releases/latest" | jq -r '.tag_name')
           else
-            UPSTREAM_VERSION=$(curl --fail --silent "https://api.github.com/repos/${{ inputs.upstream }}/releases?per_page=100" | jq -r --arg prefix "${{ inputs.upstream-version-prefix }}" '[.[] | select(.tag_name | startswith($prefix)) | select(.prerelease == false) | select(.draft == false)] | sort_by(.published_at) | last | .tag_name')
+            UPSTREAM_VERSION=$(curl --fail --silent "https://api.github.com/repos/${{ inputs.upstream }}/releases?per_page=100" | jq -r --arg prefix "$UPSTREAM_VERSION_PREFIX" '[.[] | select(.tag_name | startswith($prefix)) | select(.prerelease == false) | select(.draft == false)] | sort_by(.published_at) | last | .tag_name')
           fi
           if [ "$UPSTREAM_VERSION" == "" ] || [ "$UPSTREAM_VERSION" == "null" ]; then
               echo "upstream-version is invalid" >> "$GITHUB_OUTPUT"

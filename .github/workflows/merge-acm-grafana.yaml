@@ -2,6 +2,11 @@ name: ACM Grafana merger
 
 on:
   workflow_dispatch:
+    inputs:
+      upstream-version:
+        description: 'Exact Grafana tag (e.g. v13.1.9); leave blank for the latest v13.1.x release'
+        required: false
+        type: string
   schedule:
     - cron: '0 0 1,15 * *' #@biweekly
   pull_request:
@@ -17,6 +22,7 @@ jobs:
     uses: ./.github/workflows/merge-acm-flow.yaml
     with:
       upstream: grafana/grafana
+      upstream-version: ${{ inputs.upstream-version || '' }}
       upstream-version-prefix: "v13.1."
       downstream: stolostron/grafana
       sandbox: rhobs/acm-grafana
