@@ -45,7 +45,7 @@ on:
         default: ''
         type: string
       upstream-version-prefix:
-        description: Pin upstream to a specific version line (e.g. "v13.1."). If empty, uses the latest release.
+        description: Default version line when upstream-version is empty (e.g. "v13.1."). If empty, uses the latest release.
         required: false
         default: ''
         type: string
@@ -95,10 +95,6 @@ jobs:
           if [ -n "$UPSTREAM_VERSION_OVERRIDE" ]; then
             if ! [[ "$UPSTREAM_VERSION_OVERRIDE" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
               echo "::error::upstream-version must be a vX.Y.Z tag"
-              exit 1
-            fi
-            if [ -n "$UPSTREAM_VERSION_PREFIX" ] && [[ "$UPSTREAM_VERSION_OVERRIDE" != "$UPSTREAM_VERSION_PREFIX"* ]]; then
-              echo "::error::upstream-version must start with $UPSTREAM_VERSION_PREFIX"
               exit 1
             fi
             UPSTREAM_VERSION="$UPSTREAM_VERSION_OVERRIDE"
