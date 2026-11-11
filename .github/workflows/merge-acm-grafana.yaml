@@ -58,7 +58,11 @@ jobs:
         # it directly in the github action runner.
         docker build --target js-builder -t grafana-js-build .
         docker create --name grafana-jsbuild grafana-js-build:latest
-        docker cp grafana-jsbuild:/tmp/grafana/public/. ./public/
+        docker cp grafana-jsbuild:/tmp/grafana/public/build ./public/
+        # Older Grafana releases do not produce the separate Swagger bundle.
+        if grep -q "public/build-swagger" project.json; then
+          docker cp grafana-jsbuild:/tmp/grafana/public/build-swagger ./public/
+        fi
         docker rm grafana-jsbuild
 
         # Generate go files with wire
