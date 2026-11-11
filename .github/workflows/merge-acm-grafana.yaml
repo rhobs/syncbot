@@ -25,6 +25,7 @@ jobs:
       upstream-version: ${{ inputs.upstream-version || '' }}
       upstream-version-prefix: "v13.1."
       downstream: stolostron/grafana
+      downstream-branch: release-5.1
       sandbox: rhobs/acm-grafana
       node-version: "22"
       go-mod-tidy: false
