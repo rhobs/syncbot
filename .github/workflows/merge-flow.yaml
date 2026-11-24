@@ -195,7 +195,7 @@ jobs:
           echo "$version_from_tag" > VERSION
           git add VERSION
           git diff --cached --exit-code || git commit -s -m "[bot] add VERSION file with ${version_from_tag}"
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
           # Don't pin to go.mod: deps may require a newer Go
           # patch, and upstream CI may already be running it, hiding
